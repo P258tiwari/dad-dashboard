@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Banking &amp; Finance – DAD Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Balthazar&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/nav.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    .fin-chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .fin-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:50px;border:1.5px solid var(--border);background:var(--white);font-size:13px;font-weight:600;color:var(--txt2);cursor:pointer;transition:all .16s;box-shadow:var(--shadow-xs);white-space:nowrap;font-family:var(--font)}
+    .fin-chip:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-lt)}
+    .fin-chip.active{background:var(--sb-active);color:white;border-color:var(--sb-active);box-shadow:0 3px 12px rgba(27,28,49,.26)}
+    .chip-cnt{font-size:11px;font-weight:700;padding:1px 7px;border-radius:50px}
+    .fin-chip.active .chip-cnt{background:rgba(255,255,255,.22);color:white}
+    .fin-chip:not(.active) .chip-cnt{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
+
+    .period-pills{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .period-pill{padding:5px 14px;border-radius:50px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--white);color:var(--txt2);cursor:pointer;transition:all .14s;font-family:var(--font)}
+    .period-pill:hover{border-color:var(--brand);color:var(--brand)}
+    .period-pill.active{background:var(--brand);color:white;border-color:var(--brand)}
+    .custom-range{display:none;align-items:center;gap:6px}
+    .custom-range.show{display:flex}
+    .custom-range input{padding:5px 10px;border-radius:8px;border:1.5px solid var(--border);font-size:12px;background:var(--white);color:var(--txt);font-family:var(--font)}
+
+
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    .tab-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+    .tab-kpi{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow-xs)}
+    .tab-kpi-val{font-size:18px;font-weight:800;color:var(--txt);line-height:1.1}
+    .tab-kpi-lbl{font-size:11px;color:var(--muted);margin-top:3px;font-weight:500}
+
+    .charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+
+    /* Right panel KPI rows (mirrors tasks/reminders) */
+    .rp-kpi-row{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:12px;background:var(--surface);border:1.5px solid var(--border-lt);margin-bottom:7px;transition:transform .14s ease}
+    .rp-kpi-row:hover{transform:translateX(2px)}
+    .rp-kpi-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .rp-kpi-body{flex:1;min-width:0}
+    .rp-kpi-val{font-size:19px;font-weight:800;color:var(--txt);line-height:1}
+    .rp-kpi-lbl{font-size:10.5px;color:var(--muted);margin-top:2px;font-weight:500}
+    /* Finance right panel — action buttons */
+    .action-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);color:var(--txt);font-size:13px;font-weight:600;cursor:pointer;transition:all .16s;font-family:var(--font);margin-bottom:8px}
+    .action-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.1)}
+    .action-btn.a-pdf{background:#090071;color:white;border-color:#090071}
+    .action-btn.a-pdf:hover{background:#0a0082;box-shadow:0 4px 14px rgba(9,0,113,.3)}
+    .action-btn.a-wa{background:#25D366;color:white;border-color:#25D366}
+    .action-btn.a-wa:hover{background:#1ebe59;box-shadow:0 4px 14px rgba(37,211,102,.3)}
+    /* Bank detail rows inside rp-content */
+    .bk-detail-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border-lt)}
+    .bk-detail-row:last-child{border-bottom:none}
+    .bk-dk{font-size:11px;color:var(--muted);font-weight:500}
+    .bk-dv{font-size:12px;color:var(--txt);font-weight:700;text-align:right;max-width:60%}
+    /* Table filter bar */
+    .tbl-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .tbl-actions{display:flex;align-items:center;gap:8px}
+    .srch-inp{width:180px;height:36px;box-sizing:border-box}
+    .btn-filter{height:36px;box-sizing:border-box}
+    .btn-filter{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:600;color:var(--txt2);cursor:pointer;transition:all .15s;font-family:var(--font);white-space:nowrap}
+    .btn-filter:hover{background:var(--brand-lt);border-color:var(--brand);color:var(--brand)}
+    .btn-filter.active{background:var(--brand);border-color:var(--brand);color:white}
+    .filter-drawer{display:none;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 0 4px;border-top:1px solid var(--border-lt);margin-top:12px}
+    .filter-drawer.open{display:flex}
+    .filter-drawer select.form-inp{width:auto;min-width:150px;max-width:200px}
+    .btn-clear-red{display:none;padding:7px 14px;border-radius:8px;border:1.5px solid #fca5a5;background:#fef2f2;font-size:12px;font-weight:600;color:#ef4444;cursor:pointer;font-family:var(--font);transition:all .15s}
+    .btn-clear-red:hover{background:#fee2e2;border-color:#ef4444}
+    .filter-drawer.has-filter .btn-clear-red{display:inline-flex;align-items:center}
+    /* Top transactions */
+    .top-txn-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-lt)}
+    .top-txn-item:last-child{border-bottom:none}
+    .top-txn-name{font-size:12px;font-weight:600;color:var(--txt);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .top-txn-amt{font-size:12px;font-weight:800;flex-shrink:0}
+
+    @media(max-width:900px){.tab-kpi-row{grid-template-columns:repeat(2,1fr)}.charts-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<div class="page-body">
+<main class="main">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" id="hamburger">☰</button>
+      <div>
+        <div class="page-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Banking &amp; Finance
+        </div>
+        <div class="page-sub" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <a href="https://www.notion.so" target="_blank" rel="noopener noreferrer" class="notion-badge">
+        <img src="/assets/images/notion-logo.svg" alt="Notion" width="18" height="18" style="display:block">
+        <span>Notion</span><span class="notion-dot"></span>
+      </a>
+    </div>
+  </div>
+  <script>document.getElementById('topbarDate').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});</script>
+
+
+  <!-- ── Chip tabs + Timeline ── -->
+  <div class="fin-chips" id="finChips" style="margin-bottom:12px">
+    <button class="fin-chip active" data-tab="bank">
+      Bank Transactions <span class="chip-cnt" id="cntBank">0</span>
+    </button>
+    <button class="fin-chip" data-tab="tools">
+      Tools &amp; Assets <span class="chip-cnt" id="cntTools">0</span>
+    </button>
+    <button class="fin-chip" data-tab="mkt">
+      Marketing <span class="chip-cnt" id="cntMkt">0</span>
+    </button>
+  </div>
+  <div class="period-pills" id="periodPills" style="margin-bottom:20px">
+      <button class="period-pill active" data-period="1m">This Month</button>
+      <button class="period-pill" data-period="all">All Time</button>
+      <button class="period-pill" data-period="lastm">Last Month</button>
+      <button class="period-pill" data-period="3m">Last 3 Months</button>
+      <button class="period-pill" data-period="6m">Last 6 Months</button>
+      <button class="period-pill" data-period="1y">This Year</button>
+      <button class="period-pill" data-period="custom">Custom</button>
+      <div class="custom-range" id="customRange">
+        <input type="date" id="dateFrom">
+        <span style="font-size:11px;color:var(--muted)">to</span>
+        <input type="date" id="dateTo">
+      </div>
+  </div>
+
+  <!-- ══ BANK TAB ══ -->
+  <div class="tab-panel active" id="tab-bank">
+    <div class="tab-kpi-row" id="bankKPIs">
+      <div class="tab-kpi"><div class="spin" style="margin:auto"></div></div>
+    </div>
+    <div class="charts-row">
+      <div class="card-lg">
+        <div class="card-hd"><div class="card-title" id="bankLineTitle">Credits vs Debits</div></div>
+        <div class="chart-box"><canvas id="chartBankLine" style="max-height:260px"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">Expense Categories</div></div>
+        <div class="chart-box"><canvas id="chartBankCat"></canvas></div>
+        <div id="bankCatLegend" class="h-legend"></div>
+      </div>
+    </div>
+    <div class="card-lg">
+      <div class="card-hd" style="flex-direction:column;gap:0;align-items:stretch">
+        <div class="tbl-top">
+          <div><div class="card-title">All Transactions</div><div class="card-sub" id="bankCount">—</div></div>
+          <div class="tbl-actions">
+            <input id="bkSearch" type="text" class="form-inp srch-inp" placeholder="Search…">
+            <button class="btn-filter" id="bkFilterBtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+              Filter
+            </button>
+          </div>
+        </div>
+        <div class="filter-drawer" id="bkFilterDrawer">
+          <select id="bkType" class="form-inp"><option value="">All Types</option><option value="credit">Credit</option><option value="debit">Debit</option></select>
+          <select id="bkCat" class="form-inp"><option value="">All Categories</option></select>
+          <select id="bkMode" class="form-inp"><option value="">All Payment Modes</option></select>
+          <button id="bkClear" class="btn-clear-red">Clear filters</button>
+        </div>
+      </div>
+      <div id="bankTable"><div class="loading"><div class="spin"></div>Loading…</div></div>
+      <div class="pager" id="bankPager" style="display:none">
+        <button id="bkPrev">← Prev</button><span class="pager-info" id="bkPageInfo"></span><button id="bkNext">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TOOLS TAB ══ -->
+  <div class="tab-panel" id="tab-tools">
+    <div class="tab-kpi-row" id="toolsKPIs">
+      <div class="tab-kpi"><div class="spin" style="margin:auto"></div></div>
+    </div>
+    <div class="charts-row">
+      <div class="card-lg">
+        <div class="card-hd"><div class="card-title">Tools Spend Over Time</div></div>
+        <div class="chart-box"><canvas id="chartToolsBar" style="max-height:260px"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">By Payment Type</div></div>
+        <div class="chart-box"><canvas id="chartToolsType"></canvas></div>
+        <div id="toolsTypeLegend" class="h-legend"></div>
+      </div>
+    </div>
+    <div class="card-lg">
+      <div class="card-hd" style="flex-direction:column;gap:0;align-items:stretch">
+        <div class="tbl-top">
+          <div><div class="card-title">All Tool Spends</div><div class="card-sub" id="toolsCount">—</div></div>
+          <div class="tbl-actions">
+            <input id="tlSearch" type="text" class="form-inp srch-inp" placeholder="Search…">
+            <button class="btn-filter" id="tlFilterBtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+              Filter
+            </button>
+          </div>
+        </div>
+        <div class="filter-drawer" id="tlFilterDrawer">
+          <select id="tlType" class="form-inp"><option value="">All Payment Types</option></select>
+          <select id="tlMode" class="form-inp"><option value="">All Payment Modes</option></select>
+          <button id="tlClear" class="btn-clear-red">Clear filters</button>
+        </div>
+      </div>
+      <div id="toolsTable"><div class="loading"><div class="spin"></div>Loading…</div></div>
+      <div class="pager" id="toolsPager" style="display:none">
+        <button id="tlPrev">← Prev</button><span class="pager-info" id="tlPageInfo"></span><button id="tlNext">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MARKETING TAB ══ -->
+  <div class="tab-panel" id="tab-mkt">
+    <div class="tab-kpi-row" id="mktKPIs">
+      <div class="tab-kpi"><div class="spin" style="margin:auto"></div></div>
+    </div>
+    <div class="charts-row">
+      <div class="card-lg">
+        <div class="card-hd"><div class="card-title">Marketing Spend vs Budget</div></div>
+        <div class="chart-box"><canvas id="chartMktLine" style="max-height:260px"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">By Campaign Type</div></div>
+        <div class="chart-box"><canvas id="chartMktType"></canvas></div>
+        <div id="mktTypeLegend" class="h-legend"></div>
+      </div>
+    </div>
+    <div class="card-lg">
+      <div class="card-hd" style="flex-direction:column;gap:0;align-items:stretch">
+        <div class="tbl-top">
+          <div><div class="card-title">All Marketing Spends</div><div class="card-sub" id="mktCount">—</div></div>
+          <div class="tbl-actions">
+            <input id="mktSearch" type="text" class="form-inp srch-inp" placeholder="Search…">
+            <button class="btn-filter" id="mktFilterBtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+              Filter
+            </button>
+          </div>
+        </div>
+        <div class="filter-drawer" id="mktFilterDrawer">
+          <select id="mktStatus" class="form-inp"><option value="">All Statuses</option></select>
+          <select id="mktPlatform" class="form-inp"><option value="">All Platforms</option></select>
+          <select id="mktType" class="form-inp">
+            <option value="">All Types</option>
+            <option value="Ads Campaigns">Ads Campaigns</option>
+            <option value="Influencer Marketing">Influencer Marketing</option>
+            <option value="Physical Marketing">Physical Marketing</option>
+            <option value="Print Media">Print Media</option>
+          </select>
+          <button id="mktClear" class="btn-clear-red">Clear filters</button>
+        </div>
+      </div>
+      <div id="mktTable"><div class="loading"><div class="spin"></div>Loading…</div></div>
+      <div class="pager" id="mktPager" style="display:none">
+        <button id="mktPrev">← Prev</button><span class="pager-info" id="mktPageInfo"></span><button id="mktNext">Next →</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══ RIGHT PANEL ══ -->
+<aside class="live-feed-panel">
+  <div class="rp-card">
+
+    <!-- Header -->
+    <div class="rp-header">
+      <div class="rp-title">Finance Overview</div>
+    </div>
+
+    <!-- Scrollable content -->
+    <div class="rp-content" id="rpContent">
+
+      <!-- Banking Details -->
+      <div class="rp-section-label">Banking Details</div>
+
+      <div class="rp-kpi-row">
+        <div class="rp-kpi-body"><div class="rp-kpi-val" style="font-size:13px">Indian Overseas Bank</div><div class="rp-kpi-lbl">Bank Name</div></div>
+      </div>
+      <div class="rp-kpi-row">
+        <div class="rp-kpi-body"><div class="rp-kpi-val" style="font-size:13px">D.A.D. Clinik Private Limited</div><div class="rp-kpi-lbl">Account Holder</div></div>
+      </div>
+      <div class="rp-kpi-row">
+        <div class="rp-kpi-body"><div class="rp-kpi-val" style="font-size:13px">068602000001551</div><div class="rp-kpi-lbl">Account No.</div></div>
+      </div>
+      <div class="rp-kpi-row">
+        <div class="rp-kpi-body"><div class="rp-kpi-val" style="font-size:13px">Current</div><div class="rp-kpi-lbl">Account Type</div></div>
+      </div>
+      <div class="rp-kpi-row">
+        <div class="rp-kpi-body"><div class="rp-kpi-val" style="font-size:13px">IOBA0000686</div><div class="rp-kpi-lbl">IFSC Code</div></div>
+      </div>
+      <div class="rp-kpi-row">
+        <div class="rp-kpi-body"><div class="rp-kpi-val" style="font-size:13px">Kanpur - Swaroop Nagar (0686)</div><div class="rp-kpi-lbl">Branch</div></div>
+      </div>
+      <div class="rp-kpi-row">
+        <div class="rp-kpi-body"><div class="rp-kpi-val" style="font-size:13px">208020003</div><div class="rp-kpi-lbl">MICR Code</div></div>
+      </div>
+
+      <!-- Action buttons -->
+      <button class="action-btn a-pdf" id="btnPDF">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Download PDF
+      </button>
+      <button class="action-btn a-wa" id="btnWA">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Share via WhatsApp
+      </button>
+
+      <!-- This Month KPIs -->
+      <div class="rp-section-label" style="margin-top:18px">This Month Snapshot</div>
+      <div id="rpKPIs"><div class="rp-kpi-row"><div class="spin" style="margin:auto"></div></div></div>
+
+      <!-- Biggest transactions -->
+      <div class="rp-section-label" style="margin-top:18px">Biggest Transactions</div>
+      <div id="rpTopTxns"><div class="loading" style="padding:16px 0"><div class="spin"></div></div></div>
+
+    </div><!-- /rp-content -->
+  </div><!-- /rp-card -->
+</aside>
+</div>
+
+<script src="/assets/dashboard.js"></script>
+<script>
+const PAGE_SIZE  = 10;
+const USD_TO_INR = 84.5;
+
+let _allTxns = [], _allTools = [], _allMkt = [];
+let _period  = '1m', _tab = 'bank';
+let _bkFiltered = [], _bkPage = 1;
+let _tlFiltered = [], _tlPage = 1;
+let _mktFiltered= [], _mktPage= 1;
+let _cBankLine, _cBankCat, _cToolsBar, _cToolsType, _cMktLine, _cMktType;
+
+// ── Period ────────────────────────────────────────────────────
+function getPeriodBounds() {
+  const now = new Date();
+  if (_period === '1m')    return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: null };
+  if (_period === 'lastm') return { start: new Date(now.getFullYear(), now.getMonth()-1, 1), end: new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59) };
+  if (_period === '3m')  { const d=new Date(now); d.setMonth(d.getMonth()-3); return { start:d, end:null }; }
+  if (_period === '6m')  { const d=new Date(now); d.setMonth(d.getMonth()-6); return { start:d, end:null }; }
+  if (_period === '1y')    return { start: new Date(now.getFullYear(), 0, 1), end: null };
+  if (_period === 'custom') {
+    const from = document.getElementById('dateFrom').value;
+    const to   = document.getElementById('dateTo').value;
+    return { start: from ? new Date(from) : null, end: to ? new Date(to+'T23:59:59') : null };
+  }
+  return { start: null, end: null };
+}
+function inPeriod(ds) {
+  if (!ds) return false;
+  const { start, end } = getPeriodBounds();
+  const d = new Date(ds);
+  if (start && d < start) return false;
+  if (end   && d > end)   return false;
+  return true;
+}
+function monthLabel(mo) {
+  const [y,m] = mo.split('-');
+  return new Date(y, m-1, 1).toLocaleDateString('en-IN', { month:'short', year:'2-digit' });
+}
+function periodLabel() {
+  return document.querySelector('.period-pill.active')?.textContent?.trim() || 'Period';
+}
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+  try {
+    const [summary, tools, mkt] = await Promise.all([
+      api('/finance/summary'), api('/finance/tools'), api('/finance/marketing'),
+    ]);
+    _allTxns  = summary.allTransactions || [];
+    _allTools = tools || [];
+    _allMkt   = mkt   || [];
+
+    document.getElementById('cntBank').textContent  = _allTxns.length;
+    document.getElementById('cntTools').textContent = _allTools.length;
+    document.getElementById('cntMkt').textContent   = _allMkt.length;
+
+    populateBankFilters();
+    populateToolsFilters();
+    populateMktFilters();
+
+    // Chip switching
+    document.querySelectorAll('.fin-chip').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.fin-chip').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      _tab = btn.dataset.tab;
+      document.getElementById('tab-'+_tab).classList.add('active');
+      applyAll();
+    }));
+
+    // Period pills
+    document.querySelectorAll('.period-pill').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.period-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _period = btn.dataset.period;
+      document.getElementById('customRange').classList.toggle('show', _period === 'custom');
+      _bkPage = _tlPage = _mktPage = 1;
+      applyAll();
+    }));
+    document.getElementById('dateFrom').addEventListener('change', () => { _bkPage=_tlPage=_mktPage=1; applyAll(); });
+    document.getElementById('dateTo').addEventListener('change',   () => { _bkPage=_tlPage=_mktPage=1; applyAll(); });
+
+    // Filter drawer toggle buttons
+    function toggleDrawer(pfx) {
+      const drawer = document.getElementById(pfx+'FilterDrawer');
+      const btn    = document.getElementById(pfx+'FilterBtn');
+      const open   = drawer.classList.toggle('open');
+      btn.classList.toggle('active', open);
+    }
+    document.getElementById('bkFilterBtn').addEventListener('click',  () => toggleDrawer('bk'));
+    document.getElementById('tlFilterBtn').addEventListener('click',  () => toggleDrawer('tl'));
+    document.getElementById('mktFilterBtn').addEventListener('click', () => toggleDrawer('mkt'));
+
+    // Show red clear button when any dropdown is active
+    function syncClear(drawerId, ids) {
+      const active = ids.some(id => document.getElementById(id).value !== '');
+      document.getElementById(drawerId).classList.toggle('has-filter', active);
+    }
+
+    // Bank filter listeners
+    ['bkType','bkCat','bkMode'].forEach(id => document.getElementById(id).addEventListener('change', () => {
+      _bkPage=1; syncClear('bkFilterDrawer',['bkType','bkCat','bkMode']); applyBankFilters();
+    }));
+    document.getElementById('bkSearch').addEventListener('input', () => { _bkPage=1; applyBankFilters(); });
+    document.getElementById('bkClear').addEventListener('click',  () => {
+      ['bkType','bkCat','bkMode'].forEach(id => document.getElementById(id).value='');
+      syncClear('bkFilterDrawer',['bkType','bkCat','bkMode']);
+      document.getElementById('bkSearch').value=''; _bkPage=1; applyBankFilters();
+    });
+
+    // Tools filter listeners
+    ['tlType','tlMode'].forEach(id => document.getElementById(id).addEventListener('change', () => {
+      _tlPage=1; syncClear('tlFilterDrawer',['tlType','tlMode']); applyToolsFilters();
+    }));
+    document.getElementById('tlSearch').addEventListener('input', () => { _tlPage=1; applyToolsFilters(); });
+    document.getElementById('tlClear').addEventListener('click',  () => {
+      ['tlType','tlMode'].forEach(id => document.getElementById(id).value='');
+      syncClear('tlFilterDrawer',['tlType','tlMode']);
+      document.getElementById('tlSearch').value=''; _tlPage=1; applyToolsFilters();
+    });
+
+    // Mkt filter listeners
+    ['mktStatus','mktPlatform','mktType'].forEach(id => document.getElementById(id).addEventListener('change', () => {
+      _mktPage=1; syncClear('mktFilterDrawer',['mktStatus','mktPlatform','mktType']); applyMktFilters();
+    }));
+    document.getElementById('mktSearch').addEventListener('input', () => { _mktPage=1; applyMktFilters(); });
+    document.getElementById('mktClear').addEventListener('click',  () => {
+      ['mktStatus','mktPlatform','mktType'].forEach(id => document.getElementById(id).value='');
+      syncClear('mktFilterDrawer',['mktStatus','mktPlatform','mktType']);
+      document.getElementById('mktSearch').value=''; _mktPage=1; applyMktFilters();
+    });
+
+    // Pagers
+    document.getElementById('bkPrev').addEventListener('click',  () => { _bkPage--;  renderBankTable(); });
+    document.getElementById('bkNext').addEventListener('click',  () => { _bkPage++;  renderBankTable(); });
+    document.getElementById('tlPrev').addEventListener('click',  () => { _tlPage--;  renderToolsTable(); });
+    document.getElementById('tlNext').addEventListener('click',  () => { _tlPage++;  renderToolsTable(); });
+    document.getElementById('mktPrev').addEventListener('click', () => { _mktPage--; renderMktTable(); });
+    document.getElementById('mktNext').addEventListener('click', () => { _mktPage++; renderMktTable(); });
+
+    document.getElementById('btnPDF').addEventListener('click', downloadPDF);
+    document.getElementById('btnWA').addEventListener('click',  shareWhatsApp);
+
+    applyAll();
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function applyAll() {
+  updateRpKPIs();
+  applyBankFilters();
+  applyToolsFilters();
+  applyMktFilters();
+}
+
+// ── Right panel (always this-month data) ──────────────────────
+function updateRpKPIs() {
+  const now = new Date();
+  const ms  = new Date(now.getFullYear(), now.getMonth(), 1);
+  const tmT = _allTxns.filter(t  => t.date  && new Date(t.date)  >= ms);
+  const tmL = _allTools.filter(t => t.date  && new Date(t.date)  >= ms);
+
+  let cr=0, db=0;
+  tmT.forEach(t => {
+    const tp=(t.type||'').toLowerCase();
+    if (tp.includes('credit')||tp==='cr') cr+=t.amount||0;
+    else if (tp.includes('debit')||tp==='dr'||tp==='expense') db+=t.amount||0;
+  });
+  let tUSD=0, tINR=0;
+  tmL.forEach(t => { tUSD+=t.amountUSD||0; tINR+=t.amountINR||0; });
+  const tTotal = tINR + tUSD*USD_TO_INR;
+
+  document.getElementById('rpKPIs').innerHTML = `
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(16,185,129,.12);color:#10B981">${ico('trending-up',15)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${fmtMoney(cr)}</div><div class="rp-kpi-lbl">Credits this month</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(239,68,68,.12);color:#EF4444">${ico('trending-down',15)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${fmtMoney(db)}</div><div class="rp-kpi-lbl">Debits this month</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(59,130,246,.12);color:#3B82F6">${ico('activity',15)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val" style="color:${(cr-db)>=0?'#10B981':'#EF4444'}">${fmtMoney(cr-db)}</div><div class="rp-kpi-lbl">Net this month</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(139,92,246,.12);color:#8B5CF6">${ico('tool',15)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val" style="font-size:14px">₹${Math.round(tTotal).toLocaleString('en-IN')}</div><div class="rp-kpi-lbl">Tools spent (USD→INR)</div></div>
+    </div>`;
+
+  const top = [...tmT].sort((a,b)=>(b.amount||0)-(a.amount||0)).slice(0,5);
+  document.getElementById('rpTopTxns').innerHTML = top.length
+    ? top.map(t => {
+        const isC = (t.type||'').toLowerCase().includes('credit')||(t.type||'').toLowerCase()==='cr';
+        return `<div class="top-txn-item">
+          <div class="top-txn-name">${t.name||'—'}</div>
+          <div class="top-txn-amt" style="color:${isC?'#10B981':'#EF4444'}">${isC?'+':'−'}${fmtMoney(t.amount)}</div>
+        </div>`;
+      }).join('')
+    : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px 0">No transactions this month</div>';
+}
+
+// ── Bank tab ──────────────────────────────────────────────────
+function populateBankFilters() {
+  populateSelect('bkCat',  [...new Set(_allTxns.map(t=>t.category).filter(Boolean))].sort());
+  populateSelect('bkMode', [...new Set(_allTxns.map(t=>t.paymentMode).filter(Boolean))].sort());
+}
+function applyBankFilters() {
+  const type = document.getElementById('bkType').value.toLowerCase();
+  const cat  = document.getElementById('bkCat').value;
+  const mode = document.getElementById('bkMode').value;
+  const q    = document.getElementById('bkSearch').value.toLowerCase();
+  _bkFiltered = _allTxns.filter(t => {
+    if (!inPeriod(t.date)) return false;
+    if (type && !(t.type||'').toLowerCase().includes(type)) return false;
+    if (cat  && t.category !== cat)   return false;
+    if (mode && t.paymentMode !== mode) return false;
+    if (q && !(t.name||'').toLowerCase().includes(q) && !(t.description||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('cntBank').textContent = _bkFiltered.length;
+  updateBankKPIs(); updateBankCharts(); renderBankTable();
+}
+function updateBankKPIs() {
+  let cr=0, db=0;
+  _bkFiltered.forEach(t => {
+    const tp=(t.type||'').toLowerCase();
+    if (tp.includes('credit')||tp==='cr') cr+=t.amount||0;
+    else if (tp.includes('debit')||tp==='dr'||tp==='expense') db+=t.amount||0;
+  });
+  const avg = _bkFiltered.length ? Math.round((cr+db)/_bkFiltered.length) : 0;
+  document.getElementById('bankKPIs').innerHTML = `
+    <div class="tab-kpi"><div class="tab-kpi-val" style="color:#10B981">${fmtMoney(cr)}</div><div class="tab-kpi-lbl">Total Credits</div></div>
+    <div class="tab-kpi"><div class="tab-kpi-val" style="color:#EF4444">${fmtMoney(db)}</div><div class="tab-kpi-lbl">Total Debits</div></div>
+    <div class="tab-kpi"><div class="tab-kpi-val" style="color:${(cr-db)>=0?'#10B981':'#EF4444'}">${fmtMoney(cr-db)}</div><div class="tab-kpi-lbl">Net Balance</div></div>
+    <div class="tab-kpi"><div class="tab-kpi-val">${fmtMoney(avg)}</div><div class="tab-kpi-lbl">Avg per Txn</div></div>`;
+}
+function updateBankCharts() {
+  const isSingle = _period==='1m'||_period==='lastm';
+  const moMap = {};
+  _bkFiltered.forEach(t => {
+    if (!t.date) return;
+    const key = isSingle ? t.date.substring(0,10) : t.date.substring(0,7);
+    if (!moMap[key]) moMap[key]={credit:0,debit:0};
+    const tp=(t.type||'').toLowerCase();
+    if (tp.includes('credit')||tp==='cr') moMap[key].credit+=t.amount||0;
+    else if (tp.includes('debit')||tp==='dr'||tp==='expense') moMap[key].debit+=t.amount||0;
+  });
+  const ents = Object.entries(moMap).sort(([a],[b])=>a.localeCompare(b));
+  const labels = ents.map(([k]) => isSingle
+    ? (()=>{ const d=new Date(k+'T00:00:00'); return d.getDate()+' '+d.toLocaleDateString('en-IN',{month:'short'}); })()
+    : monthLabel(k));
+
+  if (_cBankLine) _cBankLine.destroy();
+  _cBankLine = buildChart('chartBankLine','line',{
+    labels,
+    datasets:[
+      { label:'Credit', data:ents.map(([,v])=>v.credit), borderColor:C.green, backgroundColor:'rgba(45,201,142,.12)', fill:true, tension:.35, pointRadius:4 },
+      { label:'Debit',  data:ents.map(([,v])=>v.debit),  borderColor:C.red,   backgroundColor:'rgba(240,82,82,.12)',  fill:true, tension:.35, pointRadius:4 },
+    ],
+  },{ plugins:{legend:{display:true}}, scales:{y:{ticks:{callback:v=>'₹'+Number(v).toLocaleString('en-IN')}}} });
+
+  const catMap={};
+  _bkFiltered.forEach(t => {
+    const tp=(t.type||'').toLowerCase();
+    if (tp.includes('debit')||tp==='dr'||tp==='expense') {
+      const c=t.category||'Other';
+      catMap[c]=(catMap[c]||0)+(t.amount||0);
+    }
+  });
+  const cats=Object.keys(catMap);
+  if (_cBankCat) _cBankCat.destroy();
+  _cBankCat = buildChart('chartBankCat','doughnut',{
+    labels: cats.length?cats:['No data'],
+    datasets:[{ data:cats.length?Object.values(catMap):[1],
+      backgroundColor:cats.length?PALETTE.slice(0,cats.length):['rgba(255,255,255,.1)'], borderWidth:0 }],
+  },{ plugins:{legend:{display:false}} });
+  renderHtmlLegend('chartBankCat','bankCatLegend');
+}
+function renderBankTable() {
+  const total=_bkFiltered.length, pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  _bkPage=Math.min(Math.max(1,_bkPage),pages);
+  const slice=_bkFiltered.slice((_bkPage-1)*PAGE_SIZE, _bkPage*PAGE_SIZE);
+  document.getElementById('bankCount').textContent=`${total} transaction${total!==1?'s':''}`;
+  if (!total) { document.getElementById('bankTable').innerHTML='<div class="err-msg">No transactions found</div>'; document.getElementById('bankPager').style.display='none'; return; }
+  const off=(_bkPage-1)*PAGE_SIZE;
+  document.getElementById('bankTable').innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>#</th><th>Description</th><th>Date</th><th>Category</th><th>Payment Mode</th><th>Type</th><th style="text-align:right">Amount (₹)</th></tr></thead>
+    <tbody>${slice.map((t,i)=>`<tr>
+      <td style="color:var(--muted)">${off+i+1}</td>
+      <td><strong>${esc(t.name || '—')}</strong>${t.description?`<br><span style="font-size:11px;color:var(--muted)">${esc(t.description)}</span>`:''}</td>
+      <td style="white-space:nowrap">${fmtDate(t.date)}</td>
+      <td><span class="badge b-gray">${esc(t.category || '—')}</span></td>
+      <td>${esc(t.paymentMode || '—')}</td>
+      <td>${statusBadge(t.type)}</td>
+      <td style="text-align:right;font-weight:700;color:${(t.type||'').toLowerCase().includes('credit')?'var(--success)':'var(--danger)'}">
+        ${fmtMoney(t.amount)}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  document.getElementById('bankPager').style.display='flex';
+  document.getElementById('bkPageInfo').textContent=`Page ${_bkPage} of ${pages}`;
+  document.getElementById('bkPrev').disabled=_bkPage<=1;
+  document.getElementById('bkNext').disabled=_bkPage>=pages;
+}
+
+// ── Tools tab ─────────────────────────────────────────────────
+function populateToolsFilters() {
+  populateSelect('tlType', [...new Set(_allTools.map(t=>t.paymentType).filter(Boolean))].sort());
+  populateSelect('tlMode', [...new Set(_allTools.map(t=>t.paymentMode).filter(Boolean))].sort());
+}
+function applyToolsFilters() {
+  const type=document.getElementById('tlType').value, mode=document.getElementById('tlMode').value;
+  const q=document.getElementById('tlSearch').value.toLowerCase();
+  _tlFiltered=_allTools.filter(t => {
+    if (!inPeriod(t.date)) return false;
+    if (type && t.paymentType!==type) return false;
+    if (mode && t.paymentMode!==mode) return false;
+    if (q && !(t.name||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('cntTools').textContent = _tlFiltered.length;
+  updateToolsKPIs(); updateToolsCharts(); renderToolsTable();
+}
+function updateToolsKPIs() {
+  let usd=0, inr=0;
+  _tlFiltered.forEach(t => { usd+=t.amountUSD||0; inr+=t.amountINR||0; });
+  const total=inr+usd*USD_TO_INR;
+  document.getElementById('toolsKPIs').innerHTML=`
+    <div class="tab-kpi"><div class="tab-kpi-val" style="color:#1a56db">$${usd.toFixed(2)}</div><div class="tab-kpi-lbl">Total USD</div></div>
+    <div class="tab-kpi"><div class="tab-kpi-val" style="color:#166534">₹${inr.toLocaleString('en-IN')}</div><div class="tab-kpi-lbl">Total INR</div></div>
+    <div class="tab-kpi"><div class="tab-kpi-val">₹${Math.round(total).toLocaleString('en-IN')}</div><div class="tab-kpi-lbl">Total (USD→INR)</div></div>
+    <div class="tab-kpi"><div class="tab-kpi-val">${_tlFiltered.length}</div><div class="tab-kpi-lbl">Transactions</div></div>`;
+}
+function updateToolsCharts() {
+  const moMap={};
+  _tlFiltered.forEach(t => {
+    if (!t.date) return;
+    const k=t.date.substring(0,7);
+    moMap[k]=(moMap[k]||0)+(t.amountINR||0)+(t.amountUSD||0)*USD_TO_INR;
+  });
+  const ents=Object.entries(moMap).sort(([a],[b])=>a.localeCompare(b));
+  if (_cToolsBar) _cToolsBar.destroy();
+  _cToolsBar=buildChart('chartToolsBar','bar',{
+    labels:ents.map(([k])=>monthLabel(k)),
+    datasets:[{ label:'Total (₹)', data:ents.map(([,v])=>Math.round(v)), backgroundColor:'rgba(27,86,219,.7)', borderRadius:6 }],
+  },{ plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'₹'+Number(v).toLocaleString('en-IN')}}} });
+
+  const typeMap={};
+  _tlFiltered.forEach(t => { const k=t.paymentType||'Other'; typeMap[k]=(typeMap[k]||0)+1; });
+  const types=Object.keys(typeMap);
+  if (_cToolsType) _cToolsType.destroy();
+  _cToolsType=buildChart('chartToolsType','doughnut',{
+    labels:types.length?types:['No data'],
+    datasets:[{ data:types.length?Object.values(typeMap):[1], backgroundColor:types.length?PALETTE.slice(0,types.length):['rgba(255,255,255,.1)'], borderWidth:0 }],
+  },{ plugins:{legend:{display:false}} });
+  renderHtmlLegend('chartToolsType','toolsTypeLegend');
+}
+function renderToolsTable() {
+  const total=_tlFiltered.length, pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  _tlPage=Math.min(Math.max(1,_tlPage),pages);
+  const slice=_tlFiltered.slice((_tlPage-1)*PAGE_SIZE, _tlPage*PAGE_SIZE);
+  document.getElementById('toolsCount').textContent=`${total} transaction${total!==1?'s':''}`;
+  if (!total) { document.getElementById('toolsTable').innerHTML='<div class="err-msg">No transactions found</div>'; document.getElementById('toolsPager').style.display='none'; return; }
+  const off=(_tlPage-1)*PAGE_SIZE;
+  document.getElementById('toolsTable').innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>#</th><th>Name</th><th>Date</th><th>Payment Type</th><th>Payment Mode</th><th style="text-align:right">Amount</th></tr></thead>
+    <tbody>${slice.map((t,i)=>{
+      const isUSD = t.amountUSD!=null && t.amountUSD>0;
+      const amt   = isUSD ? '$'+t.amountUSD.toFixed(2) : t.amountINR!=null && t.amountINR>0 ? '₹'+t.amountINR.toLocaleString('en-IN') : '—';
+      const amtClr= isUSD ? '#1a56db' : '#166534';
+      return `<tr>
+        <td style="color:var(--muted)">${off+i+1}</td>
+        <td><strong>${esc(t.name || '—')}</strong></td>
+        <td style="white-space:nowrap">${fmtDate(t.date)}</td>
+        <td><span class="badge b-gray">${esc(t.paymentType || '—')}</span></td>
+        <td>${esc(t.paymentMode || '—')}</td>
+        <td style="text-align:right;font-weight:700;color:${amtClr}">${amt}</td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+  document.getElementById('toolsPager').style.display='flex';
+  document.getElementById('tlPageInfo').textContent=`Page ${_tlPage} of ${pages}`;
+  document.getElementById('tlPrev').disabled=_tlPage<=1;
+  document.getElementById('tlNext').disabled=_tlPage>=pages;
+}
+
+// ── Marketing tab ─────────────────────────────────────────────
+function populateMktFilters() {
+  populateSelect('mktStatus',   [...new Set(_allMkt.map(t=>t.status).filter(Boolean))].sort());
+  populateSelect('mktPlatform', [...new Set(_allMkt.map(t=>t.platform).filter(Boolean))].sort());
+}
+function applyMktFilters() {
+  const status=document.getElementById('mktStatus').value, platform=document.getElementById('mktPlatform').value;
+  const type=document.getElementById('mktType').value, q=document.getElementById('mktSearch').value.toLowerCase();
+  _mktFiltered=_allMkt.filter(t => {
+    if (!inPeriod(t.date)) return false;
+    if (status   && t.status   !==status)   return false;
+    if (platform && t.platform !==platform) return false;
+    if (type     && !(t.marketing||[]).includes(type)) return false;
+    if (q        && !(t.name||'').toLowerCase().includes(q) && !(t.notes||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('cntMkt').textContent = _mktFiltered.length;
+  updateMktKPIs(); updateMktCharts(); renderMktTable();
+}
+function updateMktKPIs() {
+  let budget=0, spent=0;
+  _mktFiltered.forEach(t => { budget+=t.totalBudget||0; spent+=t.totalAmount||0; });
+  const rem=budget-spent;
+  document.getElementById('mktKPIs').innerHTML=`
+    <div class="tab-kpi"><div class="tab-kpi-val" style="color:#166534">${fmtMoney(budget)}</div><div class="tab-kpi-lbl">Total Budget</div></div>
+    <div class="tab-kpi"><div class="tab-kpi-val" style="color:${spent>budget?'#EF4444':'#1a56db'}">${fmtMoney(spent)}</div><div class="tab-kpi-lbl">Total Spent</div></div>
+    <div class="tab-kpi"><div class="tab-kpi-val" style="color:${rem>=0?'var(--success)':'var(--danger)'}">₹${Math.abs(rem).toLocaleString('en-IN')}</div><div class="tab-kpi-lbl">${rem>=0?'Remaining':'Over Budget'}</div></div>
+    <div class="tab-kpi"><div class="tab-kpi-val">${_mktFiltered.length}</div><div class="tab-kpi-lbl">Campaigns</div></div>`;
+}
+function updateMktCharts() {
+  const moMap={};
+  _mktFiltered.forEach(t => {
+    if (!t.date) return;
+    const k=t.date.substring(0,7);
+    if (!moMap[k]) moMap[k]={budget:0,spent:0};
+    moMap[k].budget+=t.totalBudget||0; moMap[k].spent+=t.totalAmount||0;
+  });
+  const ents=Object.entries(moMap).sort(([a],[b])=>a.localeCompare(b));
+  if (_cMktLine) _cMktLine.destroy();
+  _cMktLine=buildChart('chartMktLine','line',{
+    labels:ents.map(([k])=>monthLabel(k)),
+    datasets:[
+      { label:'Budget', data:ents.map(([,v])=>v.budget), borderColor:C.green, backgroundColor:'rgba(45,201,142,.12)', fill:true, tension:.35, pointRadius:4 },
+      { label:'Spent',  data:ents.map(([,v])=>v.spent),  borderColor:C.red,   backgroundColor:'rgba(240,82,82,.12)',  fill:true, tension:.35, pointRadius:4 },
+    ],
+  },{ plugins:{legend:{display:true}}, scales:{y:{ticks:{callback:v=>'₹'+Number(v).toLocaleString('en-IN')}}} });
+
+  const typeMap={};
+  _mktFiltered.forEach(t => { (t.marketing||['Other']).forEach(m => { typeMap[m]=(typeMap[m]||0)+(t.totalAmount||0); }); });
+  const types=Object.keys(typeMap);
+  if (_cMktType) _cMktType.destroy();
+  _cMktType=buildChart('chartMktType','doughnut',{
+    labels:types.length?types:['No data'],
+    datasets:[{ data:types.length?Object.values(typeMap):[1], backgroundColor:types.length?PALETTE.slice(0,types.length):['rgba(255,255,255,.1)'], borderWidth:0 }],
+  },{ plugins:{legend:{display:false}} });
+  renderHtmlLegend('chartMktType','mktTypeLegend');
+}
+function renderMktTable() {
+  const total=_mktFiltered.length, pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  _mktPage=Math.min(Math.max(1,_mktPage),pages);
+  const slice=_mktFiltered.slice((_mktPage-1)*PAGE_SIZE, _mktPage*PAGE_SIZE);
+  document.getElementById('mktCount').textContent=`${total} campaign${total!==1?'s':''}`;
+  if (!total) { document.getElementById('mktTable').innerHTML='<div class="err-msg">No marketing spends found</div>'; document.getElementById('mktPager').style.display='none'; return; }
+  const MKT={'Ads Campaigns':'b-blue','Influencer Marketing':'b-purple','Physical Marketing':'b-green','Print Media':'b-gray'};
+  const off=(_mktPage-1)*PAGE_SIZE;
+  document.getElementById('mktTable').innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>#</th><th>Name</th><th>Date</th><th>Platform</th><th>Source</th><th style="text-align:right">Budget (₹)</th><th style="text-align:right">Amount (₹)</th><th>Status</th></tr></thead>
+    <tbody>${slice.map((t,i) => {
+      const over=(t.totalBudget||0)>0&&(t.totalAmount||0)>(t.totalBudget||0);
+      const badges=(t.marketing||[]).map(m=>`<span class="badge ${MKT[m]||'b-gray'}" style="margin:1px 2px">${esc(m)}</span>`).join('');
+      return `<tr>
+        <td style="color:var(--muted)">${off+i+1}</td>
+        <td><strong>${esc(t.name || '—')}</strong>${t.notes?`<br><span style="font-size:11px;color:var(--muted)">${esc(t.notes)}</span>`:''}<br>${badges}</td>
+        <td style="white-space:nowrap">${fmtDate(t.date)}</td>
+        <td>${t.platform?`<span class="badge b-gray">${esc(t.platform)}</span>`:'—'}</td>
+        <td>${t.source?`<span class="badge b-gray">${esc(t.source)}</span>`:'—'}</td>
+        <td style="text-align:right;font-weight:700;color:var(--success)">${t.totalBudget!=null?'₹'+t.totalBudget.toLocaleString('en-IN'):'—'}</td>
+        <td style="text-align:right;font-weight:700;color:${over?'var(--danger)':'#1a56db'}">${t.totalAmount!=null?'₹'+t.totalAmount.toLocaleString('en-IN'):'—'}</td>
+        <td>${statusBadge(t.status)}</td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+  document.getElementById('mktPager').style.display='flex';
+  document.getElementById('mktPageInfo').textContent=`Page ${_mktPage} of ${pages}`;
+  document.getElementById('mktPrev').disabled=_mktPage<=1;
+  document.getElementById('mktNext').disabled=_mktPage>=pages;
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function populateSelect(id, values) {
+  const sel=document.getElementById(id), first=sel.options[0];
+  sel.innerHTML=''; sel.appendChild(first);
+  values.forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+}
+
+// ── PDF Download (banking details only, auto-save) ────────────
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, H = 297;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+  const timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+  const details = [
+    ['Bank Name',       'Indian Overseas Bank'],
+    ['Account Holder',  'D.A.D. Clinik Private Limited'],
+    ['Account No.',     '068602000001551'],
+    ['Account Type',    'Current'],
+    ['IFSC Code',       'IOBA0000686'],
+    ['Branch',          'Kanpur - Swaroop Nagar (0686)'],
+    ['MICR Code',       '208020003'],
+  ];
+
+  function drawPage() {
+    // White background
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, W, H, 'F');
+
+    // Logo rounded container (white rounded rect — logo drawn on top)
+    const lSize = 28, lX = (W - lSize) / 2, lY = 22;
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(218, 220, 242);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(lX - 4, lY - 4, lSize + 8, lSize + 8, 8, 8, 'FD');
+
+    // Company name + subtitle below logo
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(9, 0, 113);
+    doc.text('Doctors At Door', W / 2, lY + lSize + 14, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(150, 152, 175);
+    doc.text('Banking Details', W / 2, lY + lSize + 22, { align: 'center' });
+
+    // Thin divider
+    doc.setDrawColor(228, 230, 248);
+    doc.setLineWidth(0.4);
+    doc.line(30, lY + lSize + 28, W - 30, lY + lSize + 28);
+
+    // Outline card (border only, no fill)
+    const cardY = lY + lSize + 36;
+    const rowH  = 16, cardH = details.length * rowH + 8;
+    doc.setDrawColor(210, 212, 238);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(18, cardY, W - 36, cardH, 5, 5, 'S');
+
+    // Rows — outline only (no alternating fill)
+    details.forEach(([key, val], i) => {
+      const y = cardY + 10 + i * rowH;
+      if (i < details.length - 1) {
+        doc.setDrawColor(228, 230, 248);
+        doc.setLineWidth(0.2);
+        doc.line(26, y + rowH - 4, W - 26, y + rowH - 4);
+      }
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9.5);
+      doc.setTextColor(145, 148, 172);
+      doc.text(key, 26, y + 3);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(22, 28, 52);
+      doc.text(val, W - 26, y + 3, { align: 'right' });
+    });
+
+    // Footer timestamp
+    doc.setDrawColor(220, 222, 242);
+    doc.setLineWidth(0.35);
+    doc.line(18, H - 22, W - 18, H - 22);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(165, 168, 192);
+    doc.text(`Generated on ${dateStr} at ${timeStr}`, W / 2, H - 13, { align: 'center' });
+  }
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = '/assets/images/dad-logo.png';
+  img.onload = () => {
+    drawPage();
+    const lSize = 28, lX = (W - lSize) / 2, lY = 22;
+    doc.addImage(img, 'PNG', lX, lY, lSize, lSize);
+    doc.save('DAD-Banking-Details.pdf');
+  };
+  img.onerror = () => { drawPage(); doc.save('DAD-Banking-Details.pdf'); };
+}
+
+// ── WhatsApp Share (banking details only) ─────────────────────
+function shareWhatsApp() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  const msg =
+    `*Bank Name:* Indian Overseas Bank\n` +
+    `*Account Holder:* D.A.D. Clinik Private Limited\n` +
+    `*Account No.:* 068602000001551\n` +
+    `*Account Type:* Current\n` +
+    `*IFSC Code:* IOBA0000686\n` +
+    `*Branch:* Kanpur - Swaroop Nagar (0686)\n` +
+    `*MICR Code:* 208020003\n\n` +
+    `_Shared on ${dateStr} via DAD Dashboard_`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+init();
+</script>
+</body>
+</html>

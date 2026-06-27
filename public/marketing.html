@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Marketing & Branding — DAD Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Balthazar&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="/assets/nav.js"></script>
+  <style>
+
+    /* ── Tab chips ─────────────────────────────────────────────── */
+    .mkt-chips { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .mkt-chip {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:8px 18px; border-radius:50px;
+      border:1.5px solid var(--border); background:var(--white);
+      font-size:13px; font-weight:600; color:var(--txt2);
+      cursor:pointer; transition:all .16s ease;
+      box-shadow:var(--shadow-xs); white-space:nowrap; font-family:var(--font);
+    }
+    .mkt-chip:hover { border-color:var(--brand); color:var(--brand); background:var(--brand-lt); }
+    .mkt-chip.active { background:var(--sb-active); color:white; border-color:var(--sb-active); box-shadow:0 3px 12px rgba(27,28,49,.26); }
+    .chip-cnt { font-size:11px; font-weight:700; padding:1px 7px; border-radius:50px; }
+    .mkt-chip.active .chip-cnt { background:rgba(255,255,255,.22); color:white; }
+    .mkt-chip:not(.active) .chip-cnt { background:var(--surface); color:var(--muted); border:1px solid var(--border); }
+
+    /* ── Stats cards (banking style) ──────────────────────────── */
+    .mkt-banner { margin-bottom:22px; }
+    .mkt-banner-grid {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+    }
+    .mkt-banner-stat { background:var(--white); border:1.5px solid var(--border); border-radius:14px; padding:14px 16px; box-shadow:var(--shadow-xs); }
+    .mkt-banner-val { font-size:22px; font-weight:800; color:var(--txt); line-height:1.1; }
+    .mkt-banner-lbl { font-size:11px; color:var(--muted); margin-top:3px; font-weight:500; }
+    .mkt-banner-sub { font-size:10px; color:var(--muted); margin-top:2px; opacity:.7; }
+    .mkt-banner-dot { display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px; vertical-align:middle; }
+
+    /* ── Campaign cards ────────────────────────────────────────── */
+    .camp-card {
+      background:var(--white); border:1.5px solid var(--border);
+      border-radius:16px; padding:16px 20px 14px;
+      display:flex; align-items:flex-start; gap:14px;
+      box-shadow:var(--shadow-xs); margin-bottom:10px;
+      transition:transform .18s, box-shadow .18s;
+      animation:mktSlide .22s ease both;
+    }
+    .camp-card:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,0,0,.07); }
+    @keyframes mktSlide { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .camp-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+    .camp-body { flex:1; min-width:0; }
+    .camp-name { font-size:13.5px; font-weight:700; color:var(--txt); margin-bottom:7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .camp-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .camp-meta-item { display:inline-flex; align-items:center; gap:4px; font-size:11.5px; color:var(--muted); }
+    .camp-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; padding-left:16px; min-width:90px; }
+    .camp-budget-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+    .camp-budget-val { font-size:14px; font-weight:800; color:var(--txt); }
+    .budget-track { height:5px; border-radius:50px; background:var(--border-lt); overflow:hidden; width:80px; margin-top:2px; }
+    .budget-fill  { height:100%; border-radius:50px; transition:width .9s cubic-bezier(.4,0,.2,1); }
+
+    /* ── Influencer cards ──────────────────────────────────────── */
+    .inf-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:12px; }
+    .inf-card {
+      background:var(--white); border:1.5px solid var(--border);
+      border-radius:16px; padding:16px; animation:mktSlide .22s ease both;
+      transition:transform .16s, box-shadow .16s;
+    }
+    .inf-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.07); }
+    .inf-card-head { display:flex; align-items:center; gap:12px; margin-bottom:13px; }
+    .inf-av { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:white; flex-shrink:0; }
+    .inf-name { font-size:13px; font-weight:700; color:var(--txt); }
+    .inf-sub  { font-size:11px; color:var(--muted); margin-top:2px; }
+    .inf-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+    .inf-stat-box { background:var(--surface); border-radius:10px; padding:9px 11px; }
+    .inf-stat-val { font-size:15px; font-weight:800; color:var(--txt); }
+    .inf-stat-lbl { font-size:10px; color:var(--muted); margin-top:1px; }
+    .inf-foot { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; }
+
+    /* ── Physical cards ────────────────────────────────────────── */
+    .phys-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(270px,1fr)); gap:12px; }
+    .phys-card {
+      background:var(--white); border:1.5px solid var(--border);
+      border-radius:16px; padding:16px; animation:mktSlide .22s ease both;
+      transition:transform .16s, box-shadow .16s;
+    }
+    .phys-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.07); }
+    .phys-name { font-size:13px; font-weight:700; color:var(--txt); margin-bottom:9px; }
+    .phys-row  { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); margin-bottom:5px; }
+    .phys-amounts { display:flex; gap:14px; margin-top:11px; padding-top:10px; border-top:1px solid var(--border-lt); }
+    .phys-amt-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+    .phys-amt-val { font-size:14px; font-weight:800; color:var(--txt); margin-top:2px; }
+
+    /* ── Right panel ───────────────────────────────────────────── */
+    .rp-kpi-row { display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:12px; background:var(--surface); border:1.5px solid var(--border-lt); margin-bottom:7px; transition:transform .14s; }
+    .rp-kpi-row:hover { transform:translateX(2px); }
+    .rp-kpi-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .rp-kpi-val  { font-size:19px; font-weight:800; color:var(--txt); line-height:1; }
+    .rp-kpi-lbl  { font-size:10.5px; color:var(--muted); margin-top:2px; }
+
+    .rp-sec-lbl  { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:10px; margin-top:16px; }
+
+    .pulse-bar-row   { margin-bottom:11px; }
+    .pulse-bar-label { display:flex; justify-content:space-between; font-size:11.5px; margin-bottom:4px; }
+    .pulse-bar-name  { font-weight:600; color:var(--txt); }
+    .pulse-bar-count { font-weight:700; color:var(--muted); font-size:11px; }
+    .pulse-bar-bg    { height:6px; background:var(--border-lt); border-radius:50px; overflow:hidden; }
+    .pulse-bar-fill  { height:100%; border-radius:50px; transition:width 1s cubic-bezier(.4,0,.2,1); }
+
+    .rp-live-item { display:flex; align-items:center; gap:9px; padding:8px 0; border-bottom:1px solid var(--border-lt); }
+    .rp-live-item:last-child { border-bottom:none; }
+    .rp-live-dot  { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .rp-live-name { font-size:12px; font-weight:600; color:var(--txt); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .rp-live-plat { font-size:10.5px; color:var(--muted); white-space:nowrap; }
+
+    /* ── Empty ─────────────────────────────────────────────────── */
+    .mkt-empty { display:flex; flex-direction:column; align-items:center; padding:54px 24px; gap:10px; text-align:center; color:var(--muted); }
+    .mkt-empty-icon { width:52px; height:52px; border-radius:14px; background:var(--surface); border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; }
+
+    @media (max-width:700px) { .mkt-banner-grid { grid-template-columns:1fr 1fr; gap:10px; } }
+    .mkt-charts-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:22px; }
+    @media (max-width:640px) { .mkt-charts-row { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<div class="page-body">
+
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar" style="margin-bottom:22px">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger">&#9776;</button>
+        <div>
+          <div class="page-title" style="display:flex;align-items:center;gap:9px">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2"/><path d="M11.6 3.8L6 8H2v8h4l5.6 4.2"/><path d="M22 2s-6 3-6 10 6 10 6 10"/><circle cx="11.6" cy="12" r="1"/></svg>
+            Marketing & Branding
+          </div>
+          <div class="page-sub" id="topbarDate"></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <a href="https://www.notion.so" target="_blank" rel="noopener noreferrer" class="notion-badge">
+          <img src="/assets/images/notion-logo.svg" alt="Notion" width="18" height="18" style="display:block">
+          <span>Notion</span><span class="notion-dot"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- HERO BANNER -->
+    <div class="mkt-banner" id="mktBanner" style="display:none">
+      <div class="mkt-banner-grid" id="mktBannerGrid"></div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="mkt-charts-row">
+      <div class="card">
+        <div class="card-hd"><div class="card-title">Campaigns by Platform</div></div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="width:140px;height:140px;flex-shrink:0"><canvas id="chartCampPlat"></canvas></div>
+          <div id="chartCampPlatLeg" style="flex:1;min-width:0"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">Campaign Status</div></div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="width:140px;height:140px;flex-shrink:0"><canvas id="chartCampStatus"></canvas></div>
+          <div id="chartCampStatusLeg" style="flex:1;min-width:0"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB CHIPS -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+      <div class="mkt-chips" id="mktChips"></div>
+    </div>
+
+    <!-- CONTENT AREA -->
+    <div id="mktContent">
+      <div class="loading"><div class="spin"></div>Loading…</div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="live-feed-panel" id="liveFeedPanel">
+    <div class="rp-card">
+      <div class="rp-header">
+        <div class="rp-title">Marketing Hub</div>
+        <div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#10B981">
+          <span style="width:6px;height:6px;border-radius:50%;background:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,.2);display:inline-block"></span>
+          Live
+        </div>
+      </div>
+      <div class="rp-content" id="rpContent">
+        <div class="loading"><div class="spin"></div></div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<script src="/assets/dashboard.js"></script>
+<script>
+document.getElementById('topbarDate').textContent =
+  new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+let _campaigns   = [];
+let _influencers = [];
+let _physical    = [];
+let _activeTab   = 'campaigns';
+
+const PCOLS = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#F97316','#06B6D4','#EC4899'];
+
+// ── Status → colour ──────────────────────────────────────────
+function sCol(status) {
+  const s = (status||'').toLowerCase();
+  if (s.includes('live')||s.includes('active'))    return '#10B981';
+  if (s.includes('pause')||s.includes('hold'))     return '#F59E0B';
+  if (s.includes('end')||s.includes('cancel'))     return '#EF4444';
+  if (s.includes('plan')||s.includes('upcoming'))  return '#3B82F6';
+  if (s.includes('done')||s.includes('complete'))  return '#06B6D4';
+  return '#9CA3AF';
+}
+
+// ── Pulse bar HTML ────────────────────────────────────────────
+function pBar(name, count, max, color) {
+  const pct = Math.round((count/(max||1))*100);
+  return `<div class="pulse-bar-row">
+    <div class="pulse-bar-label">
+      <span class="pulse-bar-name">${name}</span>
+      <span class="pulse-bar-count">${count}</span>
+    </div>
+    <div class="pulse-bar-bg">
+      <div class="pulse-bar-fill" style="width:0%;background:${color}" data-pct="${pct}"></div>
+    </div>
+  </div>`;
+}
+
+// ── Hero banner ───────────────────────────────────────────────
+function buildBanner() {
+  const live    = _campaigns.filter(c=>(c.status||'').toLowerCase().includes('live')).length;
+  const totalB  = _campaigns.reduce((s,c)=>s+(Number(c.budget)||0),0);
+  const activeI = _influencers.filter(i=>(i.status||'').toLowerCase().includes('active')).length;
+
+  document.getElementById('mktBannerGrid').innerHTML = `
+    <div class="mkt-banner-stat">
+      <div class="mkt-banner-val" style="color:#1a56db">${_campaigns.length}</div>
+      <div class="mkt-banner-lbl">Total Campaigns</div>
+      <div class="mkt-banner-sub"><span class="mkt-banner-dot" style="background:#10B981"></span>${live} Live now</div>
+    </div>
+    <div class="mkt-banner-stat">
+      <div class="mkt-banner-val" style="color:#10B981">${totalB>0?'₹'+Number(totalB).toLocaleString('en-IN'):'—'}</div>
+      <div class="mkt-banner-lbl">Total Budget</div>
+      <div class="mkt-banner-sub">Across all campaigns</div>
+    </div>
+    <div class="mkt-banner-stat">
+      <div class="mkt-banner-val" style="color:#8B5CF6">${_influencers.length}</div>
+      <div class="mkt-banner-lbl">Influencers</div>
+      <div class="mkt-banner-sub"><span class="mkt-banner-dot" style="background:#10B981"></span>${activeI} Active</div>
+    </div>
+    <div class="mkt-banner-stat">
+      <div class="mkt-banner-val" style="color:#F97316">${_physical.length}</div>
+      <div class="mkt-banner-lbl">Physical Activities</div>
+      <div class="mkt-banner-sub">On-ground marketing</div>
+    </div>`;
+  document.getElementById('mktBanner').style.display = '';
+}
+
+// ── Right panel ───────────────────────────────────────────────
+function buildRightPanel() {
+  const live   = _campaigns.filter(c=>(c.status||'').toLowerCase().includes('live')).length;
+  const paused = _campaigns.filter(c=>(c.status||'').toLowerCase().includes('pause')).length;
+  const ended  = _campaigns.filter(c=>{const s=(c.status||'').toLowerCase();return s.includes('end')||s.includes('cancel')||s.includes('done')||s.includes('complete');}).length;
+
+  // Platform breakdown
+  const platMap = {};
+  _campaigns.forEach(c=>{const p=c.platform||'Other';platMap[p]=(platMap[p]||0)+1;});
+  const platMax = Math.max(...Object.values(platMap),1);
+  const platBars = Object.entries(platMap).sort(([,a],[,b])=>b-a)
+    .map(([n,c],i)=>pBar(n,c,platMax,PCOLS[i%PCOLS.length])).join('');
+
+  // Live campaigns list
+  const liveCamps = _campaigns.filter(c=>(c.status||'').toLowerCase().includes('live'));
+  const liveHtml = liveCamps.length
+    ? liveCamps.slice(0,5).map(c=>`
+        <div class="rp-live-item">
+          <div class="rp-live-dot" style="background:#10B981;box-shadow:0 0 0 2px rgba(16,185,129,.2)"></div>
+          <div style="flex:1;min-width:0">
+            <div class="rp-live-name">${c.name}</div>
+            <div class="rp-live-plat">${c.platform||'—'}</div>
+          </div>
+          <span style="font-size:10.5px;font-weight:700;color:#10B981">Live</span>
+        </div>`).join('')
+    : '<div style="font-size:12px;color:var(--muted);text-align:center;padding:12px 0">No live campaigns</div>';
+
+  document.getElementById('rpContent').innerHTML = `
+    <div class="rp-sec-lbl" style="margin-top:4px">At a Glance</div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(16,185,129,.12);color:#10B981">${ico('megaphone',14)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${live}</div><div class="rp-kpi-lbl">Live Campaigns</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(59,130,246,.12);color:#3B82F6">${ico('users',14)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${_influencers.length}</div><div class="rp-kpi-lbl">Influencers</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(249,115,22,.12);color:#F97316">${ico('map-pin',14)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${_physical.length}</div><div class="rp-kpi-lbl">Physical Activities</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(245,158,11,.12);color:#F59E0B">${ico('pause-circle',14)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${paused}</div><div class="rp-kpi-lbl">Paused</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(6,182,212,.12);color:#06B6D4">${ico('check-circle',14)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${ended}</div><div class="rp-kpi-lbl">Completed</div></div>
+    </div>
+
+    ${platBars ? `<div class="rp-sec-lbl" style="margin-top:18px">By Platform</div>${platBars}` : ''}
+
+    <div class="rp-sec-lbl" style="margin-top:18px">Live Now</div>
+    ${liveHtml}`;
+
+  animateBars();
+}
+
+function animateBars() {
+  setTimeout(()=>{
+    document.querySelectorAll('.pulse-bar-fill[data-pct]').forEach(b=>{b.style.width=b.dataset.pct+'%';});
+    document.querySelectorAll('.budget-fill[data-pct]').forEach(b=>{b.style.width=b.dataset.pct+'%';});
+  }, 120);
+}
+
+// ── Tab chips ─────────────────────────────────────────────────
+function buildChips() {
+  const TABS = [
+    { key:'campaigns',   label:'Ad Campaigns',       count:_campaigns.length },
+    { key:'influencers', label:'Influencers',         count:_influencers.length },
+    { key:'physical',    label:'Physical Activities', count:_physical.length },
+  ];
+  document.getElementById('mktChips').innerHTML = TABS.map(t=>`
+    <button class="mkt-chip${t.key===_activeTab?' active':''}" data-tab="${t.key}">
+      ${t.label}<span class="chip-cnt">${t.count}</span>
+    </button>`).join('');
+
+  document.querySelectorAll('.mkt-chip').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      _activeTab = btn.dataset.tab;
+      document.querySelectorAll('.mkt-chip').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      renderContent();
+    });
+  });
+}
+
+// ── Render active tab ─────────────────────────────────────────
+function renderContent() {
+  const box = document.getElementById('mktContent');
+  if (_activeTab === 'campaigns')   renderCampaigns(box);
+  else if (_activeTab === 'influencers') renderInfluencers(box);
+  else renderPhysical(box);
+}
+
+function renderCampaigns(box) {
+  if (!_campaigns.length) {
+    box.innerHTML=`<div class="mkt-empty"><div class="mkt-empty-icon">${ico('megaphone',22)}</div><div style="font-size:13.5px;font-weight:700;color:var(--txt2)">No campaigns found</div></div>`;
+    return;
+  }
+  box.innerHTML = _campaigns.map((c,i)=>{
+    const dot    = sCol(c.status);
+    const budN   = Number(c.budget)||0;
+    const spentN = Number(c.spent)||0;
+    const pct    = budN>0 ? Math.min(Math.round((spentN/budN)*100),100) : 0;
+    const fillC  = pct>80 ? '#EF4444' : pct>50 ? '#F59E0B' : '#10B981';
+    return `
+      <div class="camp-card" style="animation-delay:${i*28}ms">
+        <div class="camp-dot" style="background:${dot};box-shadow:0 0 0 3px ${dot}28"></div>
+        <div class="camp-body">
+          <div class="camp-name" title="${(c.name||'').replace(/"/g,'&quot;')}">${c.name||'—'}</div>
+          <div class="camp-meta">
+            ${c.platform ? `<span class="camp-meta-item"><span class="badge b-blue" style="font-size:10px">${c.platform}</span></span>` : ''}
+            ${c.goal     ? `<span class="camp-meta-item">${ico('crosshair',11)} ${c.goal}</span>` : ''}
+            ${c.managedBy? `<span class="camp-meta-item">${ico('user',11)} ${c.managedBy}</span>` : ''}
+            ${c.startDate? `<span class="camp-meta-item">${ico('calendar',11)} ${fmtDate(c.startDate)}${c.endDate?' → '+fmtDate(c.endDate):''}</span>` : ''}
+          </div>
+        </div>
+        <div class="camp-right">
+          <div>
+            <div class="camp-budget-lbl">Budget</div>
+            <div class="camp-budget-val">${budN>0?fmtMoney(budN):'—'}</div>
+            ${budN>0?`<div class="budget-track"><div class="budget-fill" style="width:0%;background:${fillC}" data-pct="${pct}"></div></div>`:''}
+          </div>
+          ${statusBadge(c.status)}
+        </div>
+      </div>`;
+  }).join('');
+  animateBars();
+}
+
+function renderInfluencers(box) {
+  if (!_influencers.length) {
+    box.innerHTML=`<div class="mkt-empty"><div class="mkt-empty-icon">${ico('users',22)}</div><div style="font-size:13.5px;font-weight:700;color:var(--txt2)">No influencers found</div></div>`;
+    return;
+  }
+  box.innerHTML = `<div class="inf-grid">${_influencers.map((inf,i)=>`
+    <div class="inf-card" style="animation-delay:${i*28}ms">
+      <div class="inf-card-head">
+        <div class="inf-av" style="background:${nameColor(inf.name)}">${initials(inf.name)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="inf-name">${inf.name}</div>
+          <div class="inf-sub">${inf.niche||inf.platform||'—'}</div>
+        </div>
+        ${statusBadge(inf.status)}
+      </div>
+      <div class="inf-stats">
+        <div class="inf-stat-box">
+          <div class="inf-stat-val">${inf.followers?Number(inf.followers).toLocaleString('en-IN'):'—'}</div>
+          <div class="inf-stat-lbl">Followers</div>
+        </div>
+        <div class="inf-stat-box">
+          <div class="inf-stat-val">${inf.amount?fmtMoney(inf.amount):'—'}</div>
+          <div class="inf-stat-lbl">Deal Amount</div>
+        </div>
+      </div>
+      <div class="inf-foot">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${inf.platform ? `<span class="badge b-blue" style="font-size:10px">${inf.platform}</span>` : ''}
+          ${inf.dealType ? `<span class="badge b-gray" style="font-size:10px">${inf.dealType}</span>` : ''}
+        </div>
+        ${inf.postLink ? `<a href="${inf.postLink}" target="_blank" rel="noopener" style="font-size:11px;color:var(--success);text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:3px">${ico('external-link',11)} View</a>` : ''}
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function renderPhysical(box) {
+  if (!_physical.length) {
+    box.innerHTML=`<div class="mkt-empty"><div class="mkt-empty-icon">${ico('map-pin',22)}</div><div style="font-size:13.5px;font-weight:700;color:var(--txt2)">No activities found</div></div>`;
+    return;
+  }
+  box.innerHTML = `<div class="phys-grid">${_physical.map((p,i)=>`
+    <div class="phys-card" style="animation-delay:${i*28}ms;border-top:3px solid ${sCol(p.status)}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
+        <div class="phys-name">${p.name}</div>
+        ${statusBadge(p.status)}
+      </div>
+      ${p.type     ? `<div class="phys-row">${ico('tag',12)} ${p.type}</div>` : ''}
+      ${p.date     ? `<div class="phys-row">${ico('calendar',12)} ${fmtDate(p.date)}</div>` : ''}
+      ${p.location ? `<div class="phys-row">${ico('map-pin',12)} ${p.location}</div>` : ''}
+      ${(p.budget||p.spent) ? `<div class="phys-amounts">
+        ${p.budget ? `<div><div class="phys-amt-lbl">Budget</div><div class="phys-amt-val">${fmtMoney(p.budget)}</div></div>` : ''}
+        ${p.spent  ? `<div><div class="phys-amt-lbl">Spent</div><div class="phys-amt-val" style="color:var(--danger)">${fmtMoney(p.spent)}</div></div>` : ''}
+      </div>` : ''}
+    </div>`).join('')}</div>`;
+}
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+  try {
+    const d = await api('/marketing');
+    _campaigns   = d.campaigns   || [];
+    _influencers = d.influencers || [];
+    _physical    = d.physical    || [];
+
+    buildBanner();
+    buildRightPanel();
+    buildChips();
+    renderContent();
+
+    // Charts
+    const platMap = {}, statMap = {};
+    _campaigns.forEach(c=>{
+      const p=c.platform||'Other'; platMap[p]=(platMap[p]||0)+1;
+      const s=c.status||'Unknown'; statMap[s]=(statMap[s]||0)+1;
+    });
+    const pk=Object.keys(platMap), sk=Object.keys(statMap);
+
+    buildChart('chartCampPlat','doughnut',{
+      labels:pk,
+      datasets:[{data:Object.values(platMap),backgroundColor:PALETTE.slice(0,pk.length),borderWidth:0}]
+    },{cutout:'62%',plugins:{legend:{display:false}}});
+    renderHtmlLegend('chartCampPlat','chartCampPlatLeg');
+
+    buildChart('chartCampStatus','doughnut',{
+      labels:sk,
+      datasets:[{data:Object.values(statMap),backgroundColor:sk.map(s=>sCol(s)),borderWidth:0}]
+    },{cutout:'62%',plugins:{legend:{display:false}}});
+    renderHtmlLegend('chartCampStatus','chartCampStatusLeg');
+
+  } catch(e) {
+    document.getElementById('mktContent').innerHTML='<div class="err-msg"><strong>Could not load marketing data</strong></div>';
+    console.error(e);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

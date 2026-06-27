@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Subscriptions &amp; Alerts — DAD Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Balthazar&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/nav.js"></script>
+  <style>
+    /* ── Chip tabs ── */
+    .rem-chips { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .rem-chip {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:8px 18px; border-radius:50px;
+      border:1.5px solid var(--border); background:var(--white);
+      font-size:13px; font-weight:600; color:var(--txt2);
+      cursor:pointer; transition:all .16s ease;
+      box-shadow:var(--shadow-xs); white-space:nowrap; font-family:var(--font);
+    }
+    .rem-chip:hover { border-color:var(--brand); color:var(--brand); background:var(--brand-lt); }
+    .rem-chip.active { background:var(--sb-active); color:white; border-color:var(--sb-active); box-shadow:0 3px 12px rgba(27,28,49,.26); }
+    .chip-cnt { font-size:11px; font-weight:700; padding:1px 7px; border-radius:50px; }
+    .rem-chip.active .chip-cnt { background:rgba(255,255,255,.22); color:white; }
+    .rem-chip:not(.active) .chip-cnt { background:var(--surface); color:var(--muted); border:1px solid var(--border); }
+
+    /* ── Cards list ── */
+    #remCards { display:flex; flex-direction:column; gap:10px; min-height:180px; }
+
+    /* ── Reminder card ── */
+    .rem-card {
+      background:var(--white); border:1.5px solid var(--border); border-radius:16px;
+      padding:16px 20px 15px; display:flex; align-items:center; gap:0;
+      box-shadow:var(--shadow-xs);
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      animation:cardSlide .26s ease both;
+    }
+    @keyframes cardSlide {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .rem-card:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(59,130,246,.12); border-color:rgba(59,130,246,.3); }
+    .rem-card.is-overdue { border-color:rgba(239,68,68,.32); background:rgba(239,68,68,.025); }
+    .rem-card.is-overdue:hover { box-shadow:0 6px 24px rgba(239,68,68,.14); border-color:rgba(239,68,68,.45); }
+    .rem-card.is-today { border-color:rgba(245,158,11,.28); background:rgba(245,158,11,.018); }
+
+    /* ── Urgency dot ── */
+    .rem-dot {
+      width:9px; height:9px; border-radius:50%; flex-shrink:0;
+      margin-right:10px; margin-top:4px;
+    }
+    .rem-dot.d-overdue { background:#EF4444; box-shadow:0 0 0 3px rgba(239,68,68,.16); animation:pulseDot 1.8s ease-in-out infinite; }
+    .rem-dot.d-today   { background:#F59E0B; box-shadow:0 0 0 3px rgba(245,158,11,.16); }
+    .rem-dot.d-soon    { background:#3B82F6; box-shadow:0 0 0 3px rgba(59,130,246,.16); }
+    .rem-dot.d-future  { background:#10B981; box-shadow:0 0 0 3px rgba(16,185,129,.14); }
+    @keyframes pulseDot {
+      0%,100% { box-shadow:0 0 0 0 rgba(239,68,68,.5); }
+      50%      { box-shadow:0 0 0 5px rgba(239,68,68,0); }
+    }
+
+    /* ── Card body ── */
+    .rem-card-body { flex:1; min-width:0; }
+    .rem-name-row { display:flex; align-items:flex-start; margin-bottom:7px; }
+    .rem-card-name { font-size:13.5px; font-weight:700; color:var(--txt); line-height:1.4; flex:1; min-width:0; }
+    .rem-card-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .rem-meta-item { display:inline-flex; align-items:center; gap:4px; font-size:11.5px; color:var(--muted); white-space:nowrap; }
+
+    /* ── Amount pills ── */
+    .amt-usd { background:rgba(9,0,113,.08); color:#090071; border:1px solid rgba(9,0,113,.14); border-radius:50px; padding:2px 9px; font-size:11px; font-weight:700; }
+    .amt-inr { background:rgba(249,115,22,.09); color:#C2410C; border:1px solid rgba(249,115,22,.2); border-radius:50px; padding:2px 9px; font-size:11px; font-weight:700; }
+
+    /* ── Freq badge on card ── */
+    .freq-badge { border-radius:50px; padding:2px 9px; font-size:11px; font-weight:700; }
+    .freq-monthly { background:rgba(99,102,241,.1); color:#4F46E5; border:1px solid rgba(99,102,241,.2); }
+    .freq-yearly  { background:rgba(16,185,129,.1); color:#065F46; border:1px solid rgba(16,185,129,.2); }
+
+    /* ── Days right column ── */
+    .rem-days-col { display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; padding-left:20px; }
+    .rem-days-label { font-size:9px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; }
+    .rem-days-val   { font-size:12.5px; font-weight:800; }
+    .days-overdue { color:#EF4444; }
+    .days-today   { color:#F59E0B; }
+    .days-soon    { color:#3B82F6; }
+    .days-future  { color:#10B981; }
+
+    /* ── Right panel KPI rows ── */
+    .rp-kpi-row { display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:12px; background:var(--surface); border:1.5px solid var(--border-lt); margin-bottom:7px; transition:transform .14s ease; }
+    .rp-kpi-row:hover { transform:translateX(2px); }
+    .rp-kpi-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .rp-kpi-body { flex:1; min-width:0; }
+    .rp-kpi-val  { font-size:19px; font-weight:800; color:var(--txt); line-height:1; }
+    .rp-kpi-lbl  { font-size:10.5px; color:var(--muted); margin-top:2px; font-weight:500; }
+
+    /* ── Frequency bar rows ── */
+    .freq-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+    .freq-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:9.5px; font-weight:800; color:white; flex-shrink:0; }
+    .freq-info { flex:1; min-width:0; }
+    .freq-lbl-txt { font-size:11.5px; font-weight:600; color:var(--txt); margin-bottom:5px; }
+    .freq-bar-bg { height:6px; border-radius:50px; background:var(--border-lt); overflow:hidden; }
+    .freq-bar    { height:100%; border-radius:50px; transition:width 1s cubic-bezier(.4,0,.2,1); width:0; }
+    .freq-count  { font-size:12.5px; font-weight:800; color:var(--txt); flex-shrink:0; min-width:24px; text-align:right; }
+
+    /* ── Urgent panel items ── */
+    .urg-list { display:flex; flex-direction:column; gap:9px; margin-bottom:20px; }
+    .urg-item {
+      border-radius:12px; padding:11px 13px;
+      border:1.5px solid var(--border-lt);
+      transition:transform .14s ease;
+    }
+    .urg-item:hover { transform:translateX(2px); }
+    .urg-item.urg-overdue { background:rgba(239,68,68,.05); border-color:rgba(239,68,68,.22); }
+    .urg-item.urg-soon    { background:rgba(59,130,246,.04); border-color:rgba(59,130,246,.18); }
+    .urg-item-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:7px; }
+    .urg-item-name { font-size:12.5px; font-weight:700; color:var(--txt); line-height:1.35; flex:1; min-width:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; }
+    .urg-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; white-space:nowrap; flex-shrink:0; }
+    .urg-label.lbl-overdue { color:#EF4444; }
+    .urg-label.lbl-today   { color:#F59E0B; }
+    .urg-label.lbl-soon    { color:#3B82F6; }
+    .urg-item-bot { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .urg-price { font-size:11.5px; font-weight:600; color:var(--txt2); }
+    .done-btn {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:5px 11px; border-radius:8px; border:1.5px solid var(--border);
+      background:var(--white); font-size:11px; font-weight:700; color:var(--txt2);
+      cursor:pointer; transition:all .15s ease; font-family:var(--font);
+    }
+    .done-btn:hover { background:var(--success); color:white; border-color:var(--success); }
+    .done-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* ── RP section header ── */
+    .rp-section-hd { font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+    .rp-divider { height:1px; background:var(--border-lt); margin:18px 0; }
+
+    /* ── Empty state ── */
+    .rem-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:64px 24px; color:var(--muted); gap:12px; text-align:center; }
+    .rem-empty-icon { width:56px; height:56px; border-radius:16px; background:var(--surface); border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--muted); }
+    .rem-empty-title { font-size:14px; font-weight:700; color:var(--txt2); }
+    .rem-empty-sub   { font-size:12px; color:var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<div class="page-body">
+
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar" style="margin-bottom:22px">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger">&#9776;</button>
+        <div>
+          <div class="page-title" style="display:flex;align-items:center;gap:9px">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Subscriptions &amp; Alerts
+          </div>
+          <div class="page-sub" id="topbarDate"></div>
+        </div>
+        <span class="badge b-red" id="overdueCount" style="display:none"></span>
+      </div>
+      <div class="topbar-right">
+        <a href="https://www.notion.so" target="_blank" rel="noopener noreferrer" class="notion-badge">
+          <img src="/assets/images/notion-logo.svg" alt="Notion" width="18" height="18" style="display:block">
+          <span>Notion</span>
+          <span class="notion-dot"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- CHIPS -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap">
+      <div class="rem-chips" id="freqChips">
+        <div class="spin" style="margin:7px 4px"></div>
+      </div>
+      <select id="typeFilter" style="display:inline-flex;align-items:center;padding:7px 32px 7px 14px;border-radius:50px;border:1.5px solid var(--border);background:var(--white) url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%238A94A6%22 stroke-width=%222.5%22><polyline points=%226 9 12 15 18 9%22/></svg>') no-repeat right 12px center;background-size:12px;appearance:none;-webkit-appearance:none;font-size:12.5px;font-weight:600;color:var(--txt2);cursor:pointer;font-family:var(--font);box-shadow:var(--shadow-xs);transition:all .15s;width:auto;white-space:nowrap" onchange="_activeType=this.value;renderCards()">
+        <option value="">All Types</option>
+      </select>
+    </div>
+
+    <!-- CARDS -->
+    <div id="remCards">
+      <div class="loading"><div class="spin"></div>Loading reminders…</div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="live-feed-panel" id="liveFeedPanel">
+    <div class="rp-card">
+      <div class="rp-header">
+        <div class="rp-title">Subscriptions &amp; Alerts</div>
+      </div>
+      <div class="rp-content" id="rpContent">
+        <div class="loading"><div class="spin"></div></div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<script src="/assets/dashboard.js"></script>
+<script>
+document.getElementById('topbarDate').textContent =
+  new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+/* ── State ── */
+let _all        = [];
+let _activeTab  = 'monthly';
+let _activeType = '';
+
+/* ── IST date helpers ── */
+function istToday() {
+  const now  = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  const d    = new Date(utcMs + 330 * 60000); // +5:30
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+function daysLeftIST(dateStr) {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const target = new Date(y, m - 1, d);
+  return Math.ceil((target - istToday()) / 86400000);
+}
+function fmtDateIST(dateStr) {
+  if (!dateStr) return '—';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+}
+
+/* ── Amount formatter ── */
+function fmtAmt(val, symbol) {
+  if (val == null) return null;
+  const n = Number(val);
+  if (isNaN(n) || n <= 0) return null;
+  return symbol === '₹'
+    ? `₹${n % 1 === 0 ? n.toLocaleString('en-IN') : n.toFixed(2)}`
+    : `$${n % 1 === 0 ? n.toLocaleString('en-US') : n.toFixed(2)}`;
+}
+
+/* ── Urgency class ── */
+function urgClass(days) {
+  if (days == null) return 'future';
+  if (days < 0)  return 'overdue';
+  if (days === 0) return 'today';
+  if (days <= 7)  return 'soon';
+  return 'future';
+}
+function urgColor(urg) {
+  return urg === 'overdue' ? '#EF4444' : urg === 'today' ? '#F59E0B' : urg === 'soon' ? '#3B82F6' : '#10B981';
+}
+
+/* ── Active reminders only ── */
+function isActive(r) {
+  const s = (r.status || '').toLowerCase();
+  return !['paused','done','snoozed','cancelled','completed','inactive'].some(x => s.includes(x));
+}
+
+/* ── Advance (Done) ── */
+async function advanceReminder(id, freq, dateStr) {
+  const btn = document.querySelector(`[data-done-id="${id}"]`);
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    await fetch(`/api/reminders/${id}/advance`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ frequency: freq, currentDate: dateStr }),
+    });
+    await init();
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Done'; }
+  }
+}
+
+/* ── Build chips ── */
+function buildChips(active) {
+  const typed   = _activeType ? active.filter(r => r.type === _activeType) : active;
+  const monthly = typed.filter(r => (r.frequency||'').toLowerCase().includes('month')).length;
+  const yearly  = typed.filter(r => {
+    const f = (r.frequency||'').toLowerCase();
+    return f.includes('year') || f.includes('annual');
+  }).length;
+
+  const TABS = [
+    { key:'monthly', label:'Monthly', count:monthly },
+    { key:'yearly',  label:'Yearly',  count:yearly  },
+  ];
+  document.getElementById('freqChips').innerHTML = TABS.map(t => `
+    <div class="rem-chip ${t.key === _activeTab ? 'active' : ''}" data-tab="${t.key}" onclick="switchTab('${t.key}')">
+      ${t.label}
+      <span class="chip-cnt">${t.count}</span>
+    </div>`).join('');
+
+  // Populate type dropdown
+  const types = [...new Set(active.map(r => r.type).filter(Boolean))].sort();
+  const sel = document.getElementById('typeFilter');
+  const prev = sel.value;
+  sel.innerHTML = `<option value="">All Types</option>` +
+    types.map(t => `<option value="${t}" ${t===prev?'selected':''}>${t}</option>`).join('');
+}
+
+/* ── Switch tab ── */
+function switchTab(tab) {
+  _activeTab = tab;
+  renderCards();
+}
+
+/* ── Render center cards ── */
+function renderCards() {
+  const active = _all.filter(isActive);
+  buildChips(active);
+  const filtered = active.filter(r => {
+    const f = (r.frequency || '').toLowerCase();
+    if (_activeTab === 'monthly' && !f.includes('month')) return false;
+    if (_activeTab === 'yearly'  && !(f.includes('year') || f.includes('annual'))) return false;
+    if (_activeType && r.type !== _activeType) return false;
+    return true;
+  });
+
+  const el = document.getElementById('remCards');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="rem-empty">
+      <div class="rem-empty-icon">${ico('bell',26)}</div>
+      <div class="rem-empty-title">No ${_activeTab} reminders</div>
+      <div class="rem-empty-sub">All clear for this frequency</div>
+    </div>`;
+    return;
+  }
+
+  // Sort: overdue first, then by days left
+  const sorted = [...filtered].sort((a, b) => {
+    const da = daysLeftIST(a.date) ?? 9999;
+    const db = daysLeftIST(b.date) ?? 9999;
+    return da - db;
+  });
+
+  el.innerHTML = sorted.map((r, i) => {
+    const days = daysLeftIST(r.date);
+    const urg  = urgClass(days);
+    const usd  = fmtAmt(r.priceUSD, '$');
+    const inr  = fmtAmt(r.priceINR, '₹');
+    const freq = (r.frequency || '').toLowerCase();
+    const freqCls = freq.includes('month') ? 'freq-monthly' : 'freq-yearly';
+
+    const daysLabel = days == null ? '—'
+      : days < 0  ? `${Math.abs(days)}d overdue`
+      : days === 0 ? 'Today'
+      : `${days}d`;
+    const daysCls = urg === 'overdue' ? 'days-overdue' : urg === 'today' ? 'days-today' : urg === 'soon' ? 'days-soon' : 'days-future';
+
+    return `<div class="rem-card ${urg === 'overdue' ? 'is-overdue' : urg === 'today' ? 'is-today' : ''}" style="animation-delay:${i * 0.03}s">
+      <div class="rem-dot d-${urg}"></div>
+      <div class="rem-card-body">
+        <div class="rem-name-row">
+          <div class="rem-card-name">${r.title}</div>
+        </div>
+        <div class="rem-card-meta">
+          <span class="freq-badge ${freqCls}">${r.frequency || 'Once'}</span>
+          ${usd ? `<span class="amt-usd">${usd}</span>` : ''}
+          ${inr ? `<span class="amt-inr">${inr}</span>` : ''}
+          <span class="rem-meta-item">${ico('calendar',11)} ${fmtDateIST(r.date)}</span>
+          ${r.type ? `<span class="rem-meta-item">${ico('tag',11)} ${r.type}</span>` : ''}
+        </div>
+      </div>
+      <div class="rem-days-col">
+        <div class="rem-days-label">Days Left</div>
+        <div class="rem-days-val ${daysCls}">${daysLabel}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Render right panel ── */
+function renderRightPanel(active) {
+  const today = istToday();
+
+  // Overdue badge
+  const overdueCnt = active.filter(r => daysLeftIST(r.date) < 0).length;
+  const bdg = document.getElementById('overdueCount');
+  if (overdueCnt > 0) { bdg.textContent = `${overdueCnt} Overdue`; bdg.style.display = ''; }
+
+  // Top 3 urgent (overdue first, then today, then soonest)
+  const urgent = [...active]
+    .filter(r => r.date && (daysLeftIST(r.date) ?? 9999) <= 7)
+    .sort((a, b) => (daysLeftIST(a.date) ?? 9999) - (daysLeftIST(b.date) ?? 9999))
+    .slice(0, 3);
+
+  // KPIs
+  const toolsSubs   = active.filter(r => {
+    const t = (r.type || '').toLowerCase();
+    return (t.includes('tool') || t.includes('subscription') || t.includes('software') || t.includes('saas')) && (daysLeftIST(r.date) ?? 0) >= 0;
+  }).length;
+  const dueToday    = active.filter(r => daysLeftIST(r.date) === 0).length;
+  const thisWeek    = active.filter(r => { const d = daysLeftIST(r.date); return d != null && d > 0 && d <= 7; }).length;
+  const overdue     = active.filter(r => (daysLeftIST(r.date) ?? 0) < 0).length;
+
+  // Frequency counts
+  const monthly = active.filter(r => (r.frequency||'').toLowerCase().includes('month')).length;
+  const yearly  = active.filter(r => { const f = (r.frequency||'').toLowerCase(); return f.includes('year') || f.includes('annual'); }).length;
+  const maxFreq = Math.max(monthly, yearly, 1);
+
+  document.getElementById('rpContent').innerHTML = `
+    <!-- URGENT SECTION -->
+    <div class="rp-section-hd">${ico('zap',12)} Urgent</div>
+    <div class="urg-list">
+      ${urgent.length === 0 ? `
+        <div style="text-align:center;padding:18px 0;color:var(--muted);font-size:12px">
+          ${ico('check-circle',22)}<br><span style="margin-top:6px;display:block">Nothing urgent right now</span>
+        </div>` : urgent.map(r => {
+        const days = daysLeftIST(r.date);
+        const urg  = urgClass(days);
+        const label = days < 0  ? `${Math.abs(days)}d overdue`
+                    : days === 0 ? 'Due today'
+                    : `${days}d left`;
+        const lblCls = urg === 'overdue' ? 'lbl-overdue' : urg === 'today' ? 'lbl-today' : 'lbl-soon';
+        const usd = fmtAmt(r.priceUSD, '$');
+        const inr = fmtAmt(r.priceINR, '₹');
+        const price = usd || inr || '';
+        return `<div class="urg-item ${urg === 'overdue' ? 'urg-overdue' : 'urg-soon'}">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:1;min-width:0">
+              <div class="urg-item-name">${r.title}</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap">
+                <span class="urg-label ${lblCls}">${label}</span>
+                ${price ? `<span class="urg-price">${price}</span>` : ''}
+              </div>
+            </div>
+            <button class="done-btn" data-done-id="${r.id}" onclick="advanceReminder('${r.id}','${r.frequency||''}','${r.date||''}')">
+              ${ico('check',11)} Done
+            </button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="rp-divider"></div>
+
+    <!-- KPIs -->
+    <div class="rp-section-hd">${ico('bar-chart-2',12)} Overview</div>
+    <div style="margin-bottom:18px">
+      <div class="rp-kpi-row">
+        <div class="rp-kpi-icon" style="background:rgba(16,185,129,.1);color:#10B981">${ico('credit-card',15)}</div>
+        <div class="rp-kpi-body">
+          <div class="rp-kpi-val">${toolsSubs}</div>
+          <div class="rp-kpi-lbl">Active Subscriptions</div>
+        </div>
+      </div>
+      <div class="rp-kpi-row">
+        <div class="rp-kpi-icon" style="background:rgba(59,130,246,.1);color:#3B82F6">${ico('calendar',15)}</div>
+        <div class="rp-kpi-body">
+          <div class="rp-kpi-val">${thisWeek}</div>
+          <div class="rp-kpi-lbl">This Week Due</div>
+        </div>
+      </div>
+      <div class="rp-kpi-row">
+        <div class="rp-kpi-icon" style="background:rgba(245,158,11,.1);color:#F59E0B">${ico('clock',15)}</div>
+        <div class="rp-kpi-body">
+          <div class="rp-kpi-val">${dueToday}</div>
+          <div class="rp-kpi-lbl">Due Today</div>
+        </div>
+      </div>
+      <div class="rp-kpi-row">
+        <div class="rp-kpi-icon" style="background:rgba(239,68,68,.1);color:#EF4444">${ico('alert-triangle',15)}</div>
+        <div class="rp-kpi-body">
+          <div class="rp-kpi-val" style="${overdue > 0 ? 'color:#EF4444' : ''}">${overdue}</div>
+          <div class="rp-kpi-lbl">Overdue</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rp-divider"></div>
+
+    <!-- BY FREQUENCY -->
+    <div class="rp-section-hd">${ico('repeat',12)} By Frequency</div>
+    <div>
+      <div class="freq-row">
+        <div class="freq-icon" style="background:#6366F1">M</div>
+        <div class="freq-info">
+          <div class="freq-lbl-txt">Monthly</div>
+          <div class="freq-bar-bg">
+            <div class="freq-bar" id="barMonthly" style="background:#6366F1;width:0"></div>
+          </div>
+        </div>
+        <div class="freq-count">${monthly}</div>
+      </div>
+      <div class="freq-row">
+        <div class="freq-icon" style="background:#10B981">Y</div>
+        <div class="freq-info">
+          <div class="freq-lbl-txt">Yearly</div>
+          <div class="freq-bar-bg">
+            <div class="freq-bar" id="barYearly" style="background:#10B981;width:0"></div>
+          </div>
+        </div>
+        <div class="freq-count">${yearly}</div>
+      </div>
+    </div>`;
+
+  // Animate bars
+  requestAnimationFrame(() => {
+    const bm = document.getElementById('barMonthly');
+    const by = document.getElementById('barYearly');
+    if (bm) bm.style.width = `${(monthly / maxFreq) * 100}%`;
+    if (by) by.style.width = `${(yearly  / maxFreq) * 100}%`;
+  });
+}
+
+/* ── Init ── */
+async function init() {
+  try {
+    _all = await api('/reminders');
+    const active = _all.filter(isActive);
+    buildChips(active);
+    renderCards();
+    renderRightPanel(active);
+  } catch(e) {
+    document.getElementById('remCards').innerHTML = `<div style="color:var(--danger);padding:20px;font-size:13px">Error loading reminders. Check server.</div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

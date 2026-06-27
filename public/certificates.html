@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Empanelment — DAD Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Balthazar&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/nav.js"></script>
+  <style>
+    /* ── Chips ── */
+    .cert-chips { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .cert-chip {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:7px 16px; border-radius:50px;
+      border:1.5px solid var(--border); background:var(--white);
+      font-size:12.5px; font-weight:600; color:var(--txt2);
+      cursor:pointer; transition:all .15s ease;
+      box-shadow:var(--shadow-xs); white-space:nowrap; font-family:var(--font);
+    }
+    .cert-chip:hover { border-color:var(--brand); color:var(--brand); background:var(--brand-lt); }
+    .cert-chip.active { background:var(--sb-active); color:white; border-color:var(--sb-active); box-shadow:0 3px 12px rgba(27,28,49,.22); }
+    .chip-cnt { font-size:11px; font-weight:700; padding:1px 7px; border-radius:50px; }
+    .cert-chip.active .chip-cnt { background:rgba(255,255,255,.22); color:white; }
+    .cert-chip:not(.active) .chip-cnt { background:var(--surface); color:var(--muted); border:1px solid var(--border); }
+
+
+    /* ── Search ── */
+    .cert-search-wrap {
+      display:flex; align-items:center; gap:8px;
+      background:var(--white); border:1.5px solid var(--border);
+      border-radius:50px; padding:7px 16px;
+      box-shadow:var(--shadow-xs); color:var(--muted);
+    }
+    .cert-search-wrap input {
+      border:none; outline:none; background:transparent;
+      font-size:12.5px; font-family:var(--font); color:var(--txt); width:180px;
+    }
+    .cert-search-wrap input::placeholder { color:var(--muted); }
+
+    /* ── Cards grid ── */
+    #certCards {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+      gap:12px; min-height:200px;
+    }
+
+    /* ── Member card ── */
+    .cert-card {
+      background:var(--white); border:1.5px solid var(--border); border-radius:16px;
+      padding:18px 18px 15px; cursor:pointer;
+      box-shadow:var(--shadow-xs);
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      animation:cardSlide .24s ease both;
+    }
+    @keyframes cardSlide { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .cert-card:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(9,0,113,.1); border-color:rgba(9,0,113,.25); }
+    .cert-card.status-expired { border-color:rgba(239,68,68,.3); background:rgba(239,68,68,.018); }
+    .cert-card.status-expiring { border-color:rgba(245,158,11,.3); background:rgba(245,158,11,.018); }
+
+    /* ── Card header ── */
+    .cert-card-head { display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; }
+    .cert-avatar {
+      width:42px; height:42px; border-radius:12px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:14px; font-weight:800; color:white; letter-spacing:.02em;
+    }
+    .cert-card-info { flex:1; min-width:0; }
+    .cert-card-name { font-size:13.5px; font-weight:700; color:var(--txt); line-height:1.3; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .cert-card-org  { font-size:11px; color:var(--muted); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* ── Badges ── */
+    .cert-badges { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px; }
+    .cert-badge {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:2px 9px; border-radius:50px; font-size:11px; font-weight:600;
+    }
+    .badge-role     { background:rgba(9,0,113,.08); color:#090071; border:1px solid rgba(9,0,113,.14); }
+    .badge-panel    { background:rgba(139,92,246,.1); color:#7C3AED; border:1px solid rgba(139,92,246,.2); }
+    .badge-active   { background:rgba(16,185,129,.1); color:#065F46; border:1px solid rgba(16,185,129,.2); }
+    .badge-inactive { background:rgba(156,163,175,.1); color:#6B7280; border:1px solid rgba(156,163,175,.2); }
+    .badge-expired  { background:rgba(239,68,68,.1);  color:#B91C1C; border:1px solid rgba(239,68,68,.2); }
+    .badge-pending  { background:rgba(245,158,11,.1); color:#92400E; border:1px solid rgba(245,158,11,.2); }
+
+    /* ── Card meta row ── */
+    .cert-card-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+    .cert-meta-item { display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); }
+
+    /* ── Docs row ── */
+    .cert-docs-row { display:flex; align-items:center; justify-content:space-between; gap:8px; padding-top:11px; border-top:1px solid var(--border-lt); }
+    .cert-doc-item { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; }
+    .doc-valid   { color:#10B981; }
+    .doc-missing { color:#F59E0B; }
+    .doc-expired { color:#EF4444; }
+    .cert-expiry-col { display:flex; flex-direction:column; align-items:flex-end; gap:1px; flex-shrink:0; }
+    .cert-expiry-lbl { font-size:9px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; }
+    .cert-expiry-val { font-size:12px; font-weight:800; }
+
+    /* ── Drawer ── */
+    .cert-drawer {
+      position:fixed; top:0; right:-480px; width:480px; height:100vh;
+      background:var(--white); border-left:1.5px solid var(--border);
+      box-shadow:-8px 0 40px rgba(15,22,41,.12);
+      z-index:500; transition:right .3s cubic-bezier(.4,0,.2,1);
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    .cert-drawer.open { right:0; }
+    .cert-drawer-head {
+      display:flex; align-items:flex-start; justify-content:space-between;
+      padding:22px 24px 18px; border-bottom:1.5px solid var(--border-lt); flex-shrink:0;
+    }
+    .cert-drawer-avatar {
+      width:52px; height:52px; border-radius:14px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px; font-weight:800; color:white; flex-shrink:0; margin-bottom:10px;
+    }
+    .cert-drawer-name { font-size:18px; font-weight:800; color:var(--txt); line-height:1.2; margin-bottom:4px; }
+    .cert-drawer-org  { font-size:12.5px; color:var(--muted); font-weight:500; }
+    .cert-drawer-close {
+      width:32px; height:32px; border-radius:9px; border:1.5px solid var(--border);
+      background:var(--surface); display:flex; align-items:center; justify-content:center;
+      cursor:pointer; flex-shrink:0; color:var(--muted); transition:all .14s;
+    }
+    .cert-drawer-close:hover { background:var(--danger-t); color:var(--danger); border-color:var(--danger); }
+    .cert-drawer-body { flex:1; overflow-y:auto; padding:20px 24px; }
+    .cert-drawer-body::-webkit-scrollbar { width:4px; }
+    .cert-drawer-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+    /* ── Drawer sections ── */
+    .dw-section { margin-bottom:22px; }
+    .dw-section-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+    .dw-section-title::after { content:''; flex:1; height:1px; background:var(--border-lt); }
+    .dw-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .dw-field { background:var(--surface); border:1.5px solid var(--border-lt); border-radius:10px; padding:10px 12px; }
+    .dw-field-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:3px; }
+    .dw-field-val { font-size:12.5px; font-weight:600; color:var(--txt); word-break:break-word; }
+    .dw-field.full { grid-column:1/-1; }
+
+    /* ── Doc link ── */
+    .dw-doc-link {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 14px; border-radius:10px; border:1.5px solid var(--border-lt);
+      background:var(--surface); margin-bottom:8px; gap:10px;
+      transition:all .14s ease;
+    }
+    .dw-doc-link:hover { border-color:var(--brand); background:var(--brand-lt); }
+    .dw-doc-link-name { font-size:12px; font-weight:600; color:var(--txt); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .dw-doc-link-open { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--brand); white-space:nowrap; }
+    .dw-upload-prompt { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; border:1.5px dashed var(--border); color:var(--muted); font-size:12px; font-weight:500; }
+
+    /* ── Notion open button ── */
+    .dw-notion-btn {
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      width:100%; padding:11px; border-radius:11px;
+      border:1.5px solid var(--border); background:var(--surface);
+      font-size:12.5px; font-weight:700; color:var(--txt2); cursor:pointer;
+      font-family:var(--font); transition:all .14s; margin-bottom:16px;
+    }
+    .dw-notion-btn:hover { border-color:#000; background:#000; color:#fff; }
+
+    /* ── Right panel ── */
+    .rp-kpi-row { display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:12px; background:var(--surface); border:1.5px solid var(--border-lt); margin-bottom:7px; transition:transform .14s ease; }
+    .rp-kpi-row:hover { transform:translateX(2px); }
+    .rp-kpi-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .rp-kpi-body { flex:1; min-width:0; }
+    .rp-kpi-val  { font-size:19px; font-weight:800; color:var(--txt); line-height:1; }
+    .rp-kpi-lbl  { font-size:10.5px; color:var(--muted); margin-top:2px; font-weight:500; }
+    .rp-section-hd { font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+    .rp-divider { height:1px; background:var(--border-lt); margin:16px 0; }
+
+    /* ── Expiring soon list ── */
+    .exp-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; border:1.5px solid var(--border-lt); margin-bottom:7px; transition:transform .14s; cursor:pointer; }
+    .exp-item:hover { transform:translateX(2px); }
+    .exp-item-av { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:white; flex-shrink:0; }
+    .exp-item-info { flex:1; min-width:0; }
+    .exp-item-name { font-size:12px; font-weight:700; color:var(--txt); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .exp-item-sub  { font-size:10.5px; color:var(--muted); margin-top:1px; }
+    .exp-item-days { font-size:11px; font-weight:800; flex-shrink:0; white-space:nowrap; }
+
+    /* ── Empty state ── */
+    .cert-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:64px 24px; color:var(--muted); gap:12px; text-align:center; grid-column:1/-1; }
+    .cert-empty-icon { width:56px; height:56px; border-radius:16px; background:var(--surface); border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; }
+
+    @media (max-width:700px) { #certCards { grid-template-columns:1fr; } .cert-drawer { width:100%; right:-100%; } }
+  </style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<div class="page-body">
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar" style="margin-bottom:22px">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger">&#9776;</button>
+        <div>
+          <div class="page-title" style="display:flex;align-items:center;gap:9px">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+            Empanelment &amp; Certificates
+          </div>
+          <div class="page-sub" id="topbarDate"></div>
+        </div>
+        <span class="badge b-red" id="expiringBadge" style="display:none"></span>
+      </div>
+      <div class="topbar-right">
+        <a href="https://www.notion.so/b89ed294d085469c86417aa2347e9ed7" target="_blank" rel="noopener noreferrer" class="notion-badge">
+          <img src="/assets/images/notion-logo.svg" alt="Notion" width="18" height="18" style="display:block">
+          <span>Notion</span><span class="notion-dot"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- FILTERS + SEARCH -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap">
+      <div class="cert-chips" id="roleChips">
+        <div class="spin" style="margin:7px 4px"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <select id="statusFilter" onchange="_activeStatus=this.value;renderCards()" style="display:inline-flex;align-items:center;padding:7px 32px 7px 14px;border-radius:50px;border:1.5px solid var(--border);background:var(--white) url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%238A94A6%22 stroke-width=%222.5%22><polyline points=%226 9 12 15 18 9%22/></svg>') no-repeat right 12px center;background-size:12px;appearance:none;-webkit-appearance:none;font-size:12.5px;font-weight:600;color:var(--txt2);cursor:pointer;font-family:var(--font);box-shadow:var(--shadow-xs)">
+          <option value="">All Status</option>
+        </select>
+        <div class="cert-search-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="certSearch" type="text" placeholder="Search members…" autocomplete="off" oninput="renderCards()">
+        </div>
+      </div>
+    </div>
+
+    <!-- CARDS -->
+    <div id="certCards">
+      <div class="loading"><div class="spin"></div>Loading empanelment data…</div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="live-feed-panel" id="liveFeedPanel">
+    <div class="rp-card">
+      <div class="rp-header">
+        <div class="rp-title">Empanelment</div>
+      </div>
+      <div class="rp-content" id="rpContent">
+        <div class="loading"><div class="spin"></div></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- DETAIL DRAWER -->
+<div class="cert-drawer" id="certDrawer">
+  <div class="cert-drawer-head">
+    <div>
+      <div class="cert-drawer-avatar" id="dwAvatar"></div>
+      <div class="cert-drawer-name" id="dwName"></div>
+      <div class="cert-drawer-org"  id="dwOrg"></div>
+    </div>
+    <button class="cert-drawer-close" onclick="closeDrawer()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="cert-drawer-body" id="dwBody"></div>
+</div>
+<div class="overlay" id="drawerOverlay" onclick="closeDrawer()" style="z-index:499"></div>
+
+<script src="/assets/dashboard.js"></script>
+<script>
+document.getElementById('topbarDate').textContent =
+  new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+let _all           = [];
+let _activeRole    = 'All';
+let _activeStatus  = '';
+
+/* ── Avatar colours ── */
+const COLORS = ['#1a56db','#10B981','#8B5CF6','#F97316','#EF4444','#F59E0B','#06B6D4','#EC4899'];
+function nameColor(n) { let h=0; for(const c of (n||'')) h=(h*31+c.charCodeAt(0))%COLORS.length; return COLORS[h]; }
+function initials(n)  { return (n||'?').split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+
+/* ── Date helpers ── */
+function today() { const d=new Date(); d.setHours(0,0,0,0); return d; }
+function daysLeft(dateStr) {
+  if (!dateStr) return null;
+  const [y,m,d] = dateStr.split('-').map(Number);
+  return Math.ceil((new Date(y,m-1,d) - today()) / 86400000);
+}
+function fmtDate(dateStr) {
+  if (!dateStr) return '—';
+  const [y,m,d] = dateStr.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+
+/* ── Expiry classification ── */
+function expiryClass(dateStr) {
+  const d = daysLeft(dateStr);
+  if (d === null) return 'none';
+  if (d < 0)  return 'expired';
+  if (d <= 30) return 'expiring';
+  return 'ok';
+}
+
+/* ── Status badge class ── */
+function statusBadge(s) {
+  const sl = (s||'').toLowerCase();
+  if (sl.includes('active'))   return 'badge-active';
+  if (sl.includes('inactive')) return 'badge-inactive';
+  if (sl.includes('expired'))  return 'badge-expired';
+  if (sl.includes('pending'))  return 'badge-pending';
+  return 'badge-inactive';
+}
+
+/* ── Build role chips ── */
+function buildChips() {
+  const roles = ['All', ...new Set(_all.flatMap(m => Array.isArray(m.role) ? m.role : (m.role ? [m.role] : [])))].filter(Boolean);
+
+  /* Count from status+search filtered set (role chip is not applied here,
+     so each chip shows how many items would match if that chip were clicked) */
+  const q = (document.getElementById('certSearch')?.value || '').toLowerCase();
+  const statusFiltered = _all.filter(m => {
+    if (_activeStatus && m.status !== _activeStatus) return false;
+    if (q && !(
+      (m.name||'').toLowerCase().includes(q) ||
+      (m.organization||'').toLowerCase().includes(q) ||
+      (m.specialization||'').toLowerCase().includes(q) ||
+      (m.location||'').toLowerCase().includes(q)
+    )) return false;
+    return true;
+  });
+
+  document.getElementById('roleChips').innerHTML = roles.map(r => {
+    const count = r === 'All'
+      ? statusFiltered.length
+      : statusFiltered.filter(m => (Array.isArray(m.role)?m.role:[m.role]).includes(r)).length;
+    return `<div class="cert-chip${r===_activeRole?' active':''}" onclick="switchRole('${r.replace(/'/g,"\\'")}')">
+      ${r}<span class="chip-cnt">${count}</span>
+    </div>`;
+  }).join('');
+
+  const statuses = [...new Set(_all.map(m=>m.status).filter(Boolean))].sort();
+  const sel = document.getElementById('statusFilter');
+  const prev = sel.value;
+  sel.innerHTML = `<option value="">All Status</option>` +
+    statuses.map(s=>`<option value="${s}" ${s===prev?'selected':''}>${s}</option>`).join('');
+}
+
+function switchRole(r) { _activeRole = r; renderCards(); }
+
+
+/* ── Render cards ── */
+function renderCards() {
+  buildChips();
+  const q = (document.getElementById('certSearch')?.value||'').toLowerCase();
+  const filtered = _all.filter(m => {
+    if (_activeRole !== 'All') {
+      const roles = Array.isArray(m.role) ? m.role : (m.role ? [m.role] : []);
+      if (!roles.includes(_activeRole)) return false;
+    }
+    if (_activeStatus && m.status !== _activeStatus) return false;
+    if (q && !(
+      (m.name||'').toLowerCase().includes(q) ||
+      (m.organization||'').toLowerCase().includes(q) ||
+      (m.specialization||'').toLowerCase().includes(q) ||
+      (m.location||'').toLowerCase().includes(q)
+    )) return false;
+    return true;
+  });
+
+  const el = document.getElementById('certCards');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="cert-empty">
+      <div class="cert-empty-icon">${ico('award',26)}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--txt2)">No members found</div>
+      <div style="font-size:12px">Try adjusting your filters</div>
+    </div>`;
+    return;
+  }
+
+  const sorted = [...filtered].sort((a,b) => {
+    const ea = daysLeft(a.agreementExpiry) ?? 9999;
+    const eb = daysLeft(b.agreementExpiry) ?? 9999;
+    return ea - eb;
+  });
+
+  el.innerHTML = sorted.map((m, i) => {
+    const color = nameColor(m.name);
+    const ec    = expiryClass(m.agreementExpiry);
+    const dl    = daysLeft(m.agreementExpiry);
+    const roles = Array.isArray(m.role) ? m.role : (m.role ? [m.role] : []);
+    const hasCert = Array.isArray(m.certificate) ? m.certificate.length > 0 : !!m.certificate;
+    const hasContract = Array.isArray(m.contract) ? m.contract.length > 0 : !!m.contract;
+
+    const expiryColor = ec==='expired' ? '#EF4444' : ec==='expiring' ? '#F59E0B' : '#10B981';
+    const expiryTxt   = dl===null ? '—' : dl<0 ? `${Math.abs(dl)}d ago` : dl===0 ? 'Today' : `${dl}d`;
+
+    return `<div class="cert-card${ec==='expired'?' status-expired':ec==='expiring'?' status-expiring':''}"
+      style="animation-delay:${i*22}ms" onclick="openDrawer('${m.id}')">
+      <div class="cert-card-head">
+        <div class="cert-avatar" style="background:${color}">${initials(m.name)}</div>
+        <div class="cert-card-info">
+          <div class="cert-card-name">${m.name}</div>
+          <div class="cert-card-org">${m.organization||m.specialization||'—'}</div>
+        </div>
+      </div>
+      <div class="cert-badges">
+        ${roles.slice(0,2).map(r=>`<span class="cert-badge badge-role">${r}</span>`).join('')}
+        ${m.panelType ? `<span class="cert-badge badge-panel">${m.panelType}</span>` : ''}
+        ${m.status ? `<span class="cert-badge ${statusBadge(m.status)}">${m.status}</span>` : ''}
+      </div>
+      ${m.location||m.phone ? `
+      <div class="cert-card-meta">
+        ${m.location ? `<span class="cert-meta-item">${ico('map-pin',11)}&nbsp;${m.location}</span>` : ''}
+        ${m.phone ? `<span class="cert-meta-item">${ico('phone',11)}&nbsp;${m.phone}</span>` : ''}
+      </div>` : ''}
+      <div class="cert-docs-row">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="cert-doc-item ${hasCert?'doc-valid':'doc-missing'}">
+            ${hasCert
+              ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Certificate`
+              : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Upload Cert`}
+          </div>
+          <div class="cert-doc-item ${hasContract?'doc-valid':'doc-missing'}">
+            ${hasContract
+              ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Agreement`
+              : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Upload Agr.`}
+          </div>
+        </div>
+        <div class="cert-expiry-col">
+          <div class="cert-expiry-lbl">Expiry</div>
+          <div class="cert-expiry-val" style="color:${expiryColor}">${expiryTxt}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Right panel ── */
+function buildRightPanel() {
+  const total    = _all.length;
+  const active   = _all.filter(m=>(m.status||'').toLowerCase().includes('active')).length;
+  const expiring = _all.filter(m => expiryClass(m.agreementExpiry) === 'expiring').length;
+  const expired  = _all.filter(m =>
+    (m.status||'').toLowerCase().includes('inactive') ||
+    (m.status||'').toLowerCase().includes('expired') ||
+    expiryClass(m.agreementExpiry) === 'expired'
+  ).length;
+  const docsMissing = _all.filter(m => {
+    const hasCert = Array.isArray(m.certificate) ? m.certificate.length>0 : !!m.certificate;
+    const hasAgr  = Array.isArray(m.contract) ? m.contract.length>0 : !!m.contract;
+    return !hasCert || !hasAgr;
+  }).length;
+  const expiringList = _all
+    .filter(m => { const d=daysLeft(m.agreementExpiry); return d!==null && d>=0 && d<=30; })
+    .sort((a,b) => daysLeft(a.agreementExpiry) - daysLeft(b.agreementExpiry))
+    .slice(0,5);
+
+  if (expiring > 0) {
+    const b = document.getElementById('expiringBadge');
+    b.textContent = expiring + ' Expiring';
+    b.style.display = '';
+  }
+
+  document.getElementById('rpContent').innerHTML = `
+    <div class="rp-section-hd">${ico('bar-chart',11)}&nbsp;Overview</div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(26,86,219,.1);color:#1a56db">${ico('users',14)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${total}</div><div class="rp-kpi-lbl">Total Panel Members</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(16,185,129,.1);color:#10B981">${ico('check-circle',14)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${active}</div><div class="rp-kpi-lbl">Active</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(245,158,11,.1);color:#F59E0B">${ico('clock',14)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${expiring}</div><div class="rp-kpi-lbl">Expiring Soon (30d)</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(239,68,68,.1);color:#EF4444">${ico('slash',14)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${expired}</div><div class="rp-kpi-lbl">Expired / Inactive</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(245,158,11,.1);color:#F59E0B">${ico('alert-triangle',14)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${docsMissing}</div><div class="rp-kpi-lbl">Missing Documents</div></div>
+    </div>
+    ${expiringList.length ? `
+    <div class="rp-divider"></div>
+    <div class="rp-section-hd">${ico('clock',11)}&nbsp;Expiring Soon</div>
+    ${expiringList.map(m => {
+      const d = daysLeft(m.agreementExpiry);
+      return `<div class="exp-item" onclick="openDrawer('${m.id}')">
+        <div class="exp-item-av" style="background:${nameColor(m.name)}">${initials(m.name)}</div>
+        <div class="exp-item-info">
+          <div class="exp-item-name">${m.name}</div>
+          <div class="exp-item-sub">${fmtDate(m.agreementExpiry)}</div>
+        </div>
+        <div class="exp-item-days" style="color:${d===0?'#F59E0B':d<=7?'#EF4444':'#F59E0B'}">${d===0?'Today':d+'d'}</div>
+      </div>`;
+    }).join('')}` : ''}`;
+}
+
+/* ── Drawer ── */
+function openDrawer(id) {
+  const m = _all.find(x => x.id === id);
+  if (!m) return;
+  const color = nameColor(m.name);
+  const roles = Array.isArray(m.role) ? m.role : (m.role ? [m.role] : []);
+  const dl    = daysLeft(m.agreementExpiry);
+  const ec    = expiryClass(m.agreementExpiry);
+  const expiryColor = ec==='expired'?'#EF4444':ec==='expiring'?'#F59E0B':'#10B981';
+  const certs   = Array.isArray(m.certificate) ? m.certificate : (m.certificate ? [m.certificate] : []);
+  const contracts = Array.isArray(m.contract) ? m.contract : (m.contract ? [m.contract] : []);
+
+  document.getElementById('dwAvatar').style.background = color;
+  document.getElementById('dwAvatar').textContent = initials(m.name);
+  document.getElementById('dwName').textContent   = m.name;
+  document.getElementById('dwOrg').textContent    = m.organization || m.specialization || '';
+
+  document.getElementById('dwBody').innerHTML = `
+    <!-- Open in Notion -->
+    <button class="dw-notion-btn" data-notion-url="${esc(m.notionUrl||'')}">
+      <img src="/assets/images/notion-logo.svg" width="16" height="16" style="display:block">
+      Open full record in Notion
+    </button>
+
+    <!-- Badges row -->
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px">
+      ${roles.map(r=>`<span class="cert-badge badge-role">${esc(r)}</span>`).join('')}
+      ${m.panelType ? `<span class="cert-badge badge-panel">${esc(m.panelType)}</span>` : ''}
+      ${m.status ? `<span class="cert-badge ${statusBadge(m.status)}">${esc(m.status)}</span>` : ''}
+    </div>
+
+    <!-- Contact -->
+    <div class="dw-section">
+      <div class="dw-section-title">Contact Info</div>
+      <div class="dw-grid">
+        ${m.email ? `<div class="dw-field full"><div class="dw-field-lbl">Email</div><div class="dw-field-val">${esc(m.email)}</div></div>` : ''}
+        ${m.phone ? `<div class="dw-field"><div class="dw-field-lbl">Phone</div><div class="dw-field-val">${esc(m.phone)}</div></div>` : ''}
+        ${m.location ? `<div class="dw-field"><div class="dw-field-lbl">Location</div><div class="dw-field-val">${esc(m.location)}</div></div>` : ''}
+        ${m.specialization ? `<div class="dw-field full"><div class="dw-field-lbl">Specialization</div><div class="dw-field-val">${esc(m.specialization)}</div></div>` : ''}
+      </div>
+    </div>
+
+    <!-- Empanelment Details -->
+    <div class="dw-section">
+      <div class="dw-section-title">Empanelment Details</div>
+      <div class="dw-grid">
+        <div class="dw-field"><div class="dw-field-lbl">Onboarding Date</div><div class="dw-field-val">${fmtDate(m.onboardingDate)}</div></div>
+        <div class="dw-field"><div class="dw-field-lbl">Agreement Expiry</div><div class="dw-field-val" style="color:${expiryColor}">${fmtDate(m.agreementExpiry)}${dl!==null?` (${dl<0?Math.abs(dl)+'d ago':dl===0?'Today':dl+'d left'})`:''}
+        </div></div>
+        ${m.lastContacted ? `<div class="dw-field"><div class="dw-field-lbl">Last Contacted</div><div class="dw-field-val">${fmtDate(m.lastContacted)}</div></div>` : ''}
+        ${m.commission ? `<div class="dw-field full"><div class="dw-field-lbl">Commission / Fee Structure</div><div class="dw-field-val">${esc(m.commission)}</div></div>` : ''}
+      </div>
+    </div>
+
+    <!-- Documents: Certificate -->
+    <div class="dw-section">
+      <div class="dw-section-title">Certificates</div>
+      ${certs.length ? certs.map((url,i) => `
+        <a class="dw-doc-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">
+          <span class="dw-doc-link-name">${ico('file-text',14)}&nbsp;&nbsp;Certificate ${certs.length>1?i+1:''}</span>
+          <span class="dw-doc-link-open">${ico('external-link',12)}&nbsp;Open</span>
+        </a>`).join('') :
+        `<div class="dw-upload-prompt">${ico('alert-triangle',14)}<span>No certificate uploaded — add it in Notion</span></div>`}
+    </div>
+
+    <!-- Documents: Contract / Agreement -->
+    <div class="dw-section">
+      <div class="dw-section-title">Contract / Agreement</div>
+      ${contracts.length ? contracts.map((url,i) => `
+        <a class="dw-doc-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">
+          <span class="dw-doc-link-name">${ico('file-text',14)}&nbsp;&nbsp;Agreement ${contracts.length>1?i+1:''}</span>
+          <span class="dw-doc-link-open">${ico('external-link',12)}&nbsp;Open</span>
+        </a>`).join('') :
+        `<div class="dw-upload-prompt">${ico('alert-triangle',14)}<span>No agreement uploaded — add it in Notion</span></div>`}
+    </div>
+
+    ${m.notes ? `
+    <div class="dw-section">
+      <div class="dw-section-title">Notes</div>
+      <div class="dw-field full"><div class="dw-field-val" style="font-weight:400;line-height:1.6">${esc(m.notes)}</div></div>
+    </div>` : ''}`;
+
+  document.getElementById('certDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('certDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+
+/* ── Init ── */
+async function init() {
+  document.getElementById('certDrawer').addEventListener('click', e => {
+    const btn = e.target.closest('[data-notion-url]');
+    if (btn && btn.dataset.notionUrl) window.open(btn.dataset.notionUrl, '_blank');
+  });
+
+  try {
+    _all = await api('/certificates');
+    buildRightPanel();
+    renderCards();
+  } catch(e) {
+    console.error(e);
+    document.getElementById('certCards').innerHTML =
+      `<div class="cert-empty"><div class="cert-empty-icon">${ico('alert-triangle',24)}</div><div style="font-size:13px;font-weight:700;color:var(--txt2)">Failed to load data</div><div style="font-size:11.5px">Could not load empanelment data. Check your Notion connection.</div></div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

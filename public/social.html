@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Social Media — DAD Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Balthazar&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="/assets/nav.js"></script>
+  <style>
+    /* ── Right panel — account cards ─────────────────────────── */
+    .acc-card {
+      border-radius: 14px;
+      padding: 13px 14px 11px;
+      margin-bottom: 8px;
+      background: var(--white);
+      border: 1.5px solid var(--border-lt);
+      transition: transform .15s ease, box-shadow .15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .acc-card:hover { transform: translateX(3px); box-shadow: 0 4px 18px rgba(0,0,0,.07); }
+    .acc-card-top { display:flex; align-items:center; gap:10px; margin-bottom:11px; }
+    .acc-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .acc-icon svg { width:18px !important; height:18px !important; }
+    .acc-name { font-size:13px; font-weight:700; color:var(--txt); line-height:1.3; }
+    .acc-handle { font-size:11px; color:var(--muted); margin-top:1px; }
+    .acc-card-foot { display:flex; align-items:center; justify-content:space-between; }
+    .acc-view { font-size:11px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px; transition:opacity .14s; }
+    .acc-view:hover { opacity:.7; }
+    .acc-badge { display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:20px; }
+
+    /* ── Right panel stat rows ────────────────────────────────── */
+    .rp-stat { display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:11px; background:var(--surface); border:1.5px solid var(--border-lt); margin-bottom:7px; }
+    .rp-stat-icon { width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .rp-stat-val { font-size:17px; font-weight:800; color:var(--txt); line-height:1; }
+    .rp-stat-lbl { font-size:10px; color:var(--muted); margin-top:2px; }
+    .rp-sec-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:10px; margin-top:16px; }
+
+    /* ── Platform filter chips ───────────────────────────────── */
+    .chips-scroll-outer { position:relative; overflow:hidden; min-width:0; }
+    .chips-scroll-outer::after { content:''; position:absolute; top:0; right:0; bottom:0; width:40px; background:linear-gradient(to right, transparent, var(--bg)); pointer-events:none; z-index:1; }
+    .plat-chips { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-bottom:18px; }
+    @media (max-width:700px) {
+      .chips-scroll-outer { width:100%; margin-bottom:14px; }
+      .plat-chips { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding-bottom:4px; padding-right:36px; margin-bottom:0; }
+      .plat-chips::-webkit-scrollbar { display:none; }
+    }
+    .plat-chip {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:7px 16px; border-radius:50px;
+      border:1.5px solid var(--border); background:var(--white);
+      font-size:12.5px; font-weight:600; color:var(--txt2);
+      cursor:pointer; transition:all .15s; font-family:var(--font);
+      box-shadow:var(--shadow-xs); white-space:nowrap;
+    }
+    .plat-chip:hover { border-color:var(--brand); color:var(--brand); }
+    .plat-chip.active { background:var(--sb-active); color:white; border-color:var(--sb-active); box-shadow:0 3px 12px rgba(27,28,49,.22); }
+    .plat-chip-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+
+    /* ── Work log cards grid ─────────────────────────────────── */
+    .log-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(290px,1fr)); gap:12px; }
+    .log-card {
+      background:var(--white);
+      border:1.5px solid var(--border);
+      border-radius:14px;
+      padding:14px 16px 12px;
+      animation:slideUp .22s ease both;
+      transition:transform .16s, box-shadow .16s;
+    }
+    .log-card:hover { transform:translateY(-2px); box-shadow:0 6px 22px rgba(0,0,0,.08); }
+    @keyframes slideUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .log-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:9px; }
+    .log-card-task { font-size:13px; font-weight:700; color:var(--txt); line-height:1.4; flex:1; min-width:0; }
+    .log-card-date { font-size:10.5px; color:var(--muted); flex-shrink:0; padding-top:2px; }
+    .log-card-plats { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:9px; }
+    .log-card-plat { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; }
+    .log-card-plat svg { width:10px; height:10px; }
+    .log-card-foot { display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border-lt); padding-top:9px; margin-top:4px; }
+    .log-meta { display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); }
+
+    /* ── Monthly Pulse card ──────────────────────────────────── */
+    .pulse-wrap { display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+    @media(max-width:760px){ .pulse-wrap{grid-template-columns:1fr} }
+    .pulse-sec-title { font-size:12.5px; font-weight:700; color:var(--txt); display:flex; align-items:center; gap:7px; margin-bottom:14px; }
+    .pulse-bar-row { margin-bottom:11px; }
+    .pulse-bar-label { display:flex; justify-content:space-between; font-size:11.5px; margin-bottom:4px; }
+    .pulse-bar-name { font-weight:600; color:var(--txt); }
+    .pulse-bar-count { font-weight:700; color:var(--muted); }
+    .pulse-bar-bg { height:6px; background:var(--border-lt); border-radius:50px; overflow:hidden; }
+    .pulse-bar-fill { height:100%; border-radius:50px; transition:width 1s cubic-bezier(.4,0,.2,1); }
+
+    /* ── Empty state ─────────────────────────────────────────── */
+    .log-empty { display:flex; flex-direction:column; align-items:center; padding:52px 24px; color:var(--muted); gap:10px; text-align:center; }
+    .log-empty-icon { width:50px; height:50px; border-radius:14px; background:var(--surface); border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; }
+  </style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<div class="page-body">
+
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar" style="margin-bottom:22px">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger">&#9776;</button>
+        <div>
+          <div class="page-title" style="display:flex;align-items:center;gap:9px">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Social Media
+          </div>
+          <div class="page-sub" id="topbarDate"></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <a href="https://www.notion.so" target="_blank" rel="noopener noreferrer" class="notion-badge">
+          <img src="/assets/images/notion-logo.svg" alt="Notion" width="18" height="18" style="display:block">
+          <span>Notion</span>
+          <span class="notion-dot"></span>
+        </a>
+      </div>
+    </div>
+
+
+    <!-- MONTHLY PULSE -->
+    <div class="card" id="pulseCard" style="margin-bottom:24px;display:none">
+      <div class="pulse-wrap">
+        <div>
+          <div class="pulse-sec-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            This Month's Pulse
+          </div>
+          <div id="pulseByPlat"></div>
+        </div>
+        <div>
+          <div class="pulse-sec-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Work Type Breakdown
+          </div>
+          <div id="pulseByType"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART — Posts by Platform -->
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-hd"><div class="card-title">Posts by Platform (This Month)</div></div>
+      <div class="chart-box"><canvas id="chartByPlatform"></canvas></div>
+    </div>
+
+    <!-- WORK LOG SECTION -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="font-size:15px;font-weight:700;color:var(--txt);display:flex;align-items:center;gap:8px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        This Month's Work Log
+        <span class="badge b-gray" id="logBadge" style="font-size:10px"></span>
+      </div>
+    </div>
+    <div class="chips-scroll-outer">
+      <div class="plat-chips" id="platChips"></div>
+    </div>
+    <div id="logCards">
+      <div class="loading"><div class="spin"></div>Loading…</div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="live-feed-panel" id="liveFeedPanel">
+    <div class="rp-card">
+      <div class="rp-header">
+        <div class="rp-title">Social Accounts</div>
+        <div style="width:8px;height:8px;border-radius:50%;background:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,.18)"></div>
+      </div>
+      <div class="rp-content" id="rpContent">
+        <div class="loading"><div class="spin"></div></div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<script src="/assets/dashboard.js"></script>
+<script>
+document.getElementById('topbarDate').textContent =
+  new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+let _log      = [];
+let _accounts = [];
+let _activeChip = 'All';
+
+const PULSE_COLS = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#F97316','#06B6D4','#EC4899'];
+
+// ── platform → count ──────────────────────────────────────────
+function countByKey(log, keyFn) {
+  const map = {};
+  log.forEach(l => {
+    const vals = keyFn(l);
+    (Array.isArray(vals) ? vals : [vals]).filter(Boolean).forEach(v => { map[v] = (map[v]||0)+1; });
+  });
+  return map;
+}
+
+// ── pulse bar HTML ────────────────────────────────────────────
+function pulseBar(name, count, max, color) {
+  const pct = Math.round((count / (max||1)) * 100);
+  return `<div class="pulse-bar-row">
+    <div class="pulse-bar-label">
+      <span class="pulse-bar-name">${name}</span>
+      <span class="pulse-bar-count">${count}</span>
+    </div>
+    <div class="pulse-bar-bg">
+      <div class="pulse-bar-fill" style="width:0%;background:${color}" data-pct="${pct}"></div>
+    </div>
+  </div>`;
+}
+
+// ── Right panel ───────────────────────────────────────────────
+function buildRightPanel() {
+  const totalHours = _log.reduce((s,l) => s + (Number(l.timeSpent)||0), 0);
+
+  const statsHtml = `
+    <div class="rp-stat">
+      <div class="rp-stat-icon" style="background:rgba(59,130,246,.12);color:#3B82F6">${ico('bar-chart-2',14)}</div>
+      <div><div class="rp-stat-val">${_log.length}</div><div class="rp-stat-lbl">Posts This Month</div></div>
+    </div>
+    <div class="rp-stat">
+      <div class="rp-stat-icon" style="background:rgba(139,92,246,.12);color:#8B5CF6">${ico('share-2',14)}</div>
+      <div><div class="rp-stat-val">${_accounts.length}</div><div class="rp-stat-lbl">Total Accounts</div></div>
+    </div>`;
+
+  const accsHtml = _accounts.length === 0
+    ? '<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px">No accounts found</div>'
+    : _accounts.map(a => {
+        const meta   = socialMeta(a.platform || a.name || '');
+        const handle = (a.handle || a.username || '').replace(/^@/,'');
+        const isActive = (a.status||'').toLowerCase().includes('active');
+        const url    = a.profileUrl || socialUrl(a.platform, handle);
+        return `
+          <div class="acc-card">
+            <div class="acc-card-top">
+              <div class="acc-icon" style="background:${meta.bg};color:${meta.color}">
+                ${meta.svg}
+              </div>
+              <div style="flex:1;min-width:0">
+                <div class="acc-name">${a.platform || a.name}</div>
+                <div class="acc-handle">${handle ? '@'+handle : '—'}</div>
+              </div>
+            </div>
+            <div class="acc-card-foot">
+              <a href="${url}" target="_blank" rel="noopener" class="acc-view" style="color:${meta.color}">
+                View Profile
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </a>
+              <span class="acc-badge" style="background:${isActive?'rgba(16,185,129,.1)':'rgba(107,114,128,.1)'};color:${isActive?'#10B981':'#9CA3AF'}">
+                <span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0"></span>
+                ${a.status || 'Unknown'}
+              </span>
+            </div>
+          </div>`;
+      }).join('');
+
+  document.getElementById('rpContent').innerHTML = `
+    <div class="rp-sec-lbl" style="margin-top:4px">Quick Stats</div>
+    ${statsHtml}
+    <div class="rp-sec-lbl" style="margin-top:18px">Accounts</div>
+    ${accsHtml}`;
+}
+
+// ── Monthly Pulse ─────────────────────────────────────────────
+function buildPulse() {
+  if (!_log.length) return;
+
+  const platMap = countByKey(_log, l => Array.isArray(l.platform) ? l.platform : [l.platform]);
+  const typeMap = countByKey(_log, l => l.workType || 'Other');
+  const platMax = Math.max(...Object.values(platMap), 1);
+  const typeMax = Math.max(...Object.values(typeMap), 1);
+
+  document.getElementById('pulseByPlat').innerHTML =
+    Object.entries(platMap).sort(([,a],[,b])=>b-a)
+      .map(([name, count], i) => {
+        const col = socialMeta(name).color !== '#6B7280' ? socialMeta(name).color : PULSE_COLS[i % PULSE_COLS.length];
+        return pulseBar(name, count, platMax, col);
+      }).join('');
+
+  document.getElementById('pulseByType').innerHTML =
+    Object.entries(typeMap).sort(([,a],[,b])=>b-a)
+      .map(([name, count], i) => pulseBar(name, count, typeMax, PULSE_COLS[i % PULSE_COLS.length]))
+      .join('');
+
+  document.getElementById('pulseCard').style.display = '';
+
+  setTimeout(() => {
+    document.querySelectorAll('.pulse-bar-fill[data-pct]').forEach(b => { b.style.width = b.dataset.pct + '%'; });
+  }, 120);
+}
+
+// ── Platform filter chips ─────────────────────────────────────
+function buildChips() {
+  const platMap = countByKey(_log, l => Array.isArray(l.platform) ? l.platform : [l.platform]);
+  const platforms = Object.keys(platMap).sort();
+
+  const chipsEl = document.getElementById('platChips');
+  chipsEl.innerHTML = ['All', ...platforms].map(p => {
+    const meta = p !== 'All' ? socialMeta(p) : null;
+    const dot  = meta ? meta.color : '#10B981';
+    const cnt  = p === 'All' ? _log.length : (platMap[p]||0);
+    return `<button class="plat-chip${p===_activeChip?' active':''}" data-plat="${p}">
+      <span class="plat-chip-dot" style="background:${dot}"></span>
+      ${p}
+      <span style="font-size:10px;font-weight:700;opacity:.6">${cnt}</span>
+    </button>`;
+  }).join('');
+
+  chipsEl.querySelectorAll('.plat-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _activeChip = btn.dataset.plat;
+      chipsEl.querySelectorAll('.plat-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderLog();
+    });
+  });
+}
+
+// ── Render log cards ──────────────────────────────────────────
+function renderLog() {
+  const filtered = _activeChip === 'All'
+    ? _log
+    : _log.filter(l => {
+        const ps = Array.isArray(l.platform) ? l.platform : [l.platform||''];
+        return ps.includes(_activeChip);
+      });
+
+  document.getElementById('logBadge').textContent = filtered.length + ' entries';
+
+  if (!filtered.length) {
+    document.getElementById('logCards').innerHTML = `
+      <div class="log-empty">
+        <div class="log-empty-icon">${ico('file-text',20)}</div>
+        <div style="font-size:13.5px;font-weight:700;color:var(--txt2)">No entries</div>
+        <div style="font-size:12px">No work logged for this platform this month</div>
+      </div>`;
+    return;
+  }
+
+  const sorted = [...filtered].sort((a,b) => {
+    if (!a.date && !b.date) return 0;
+    if (!a.date) return 1; if (!b.date) return -1;
+    return new Date(b.date) - new Date(a.date);
+  });
+
+  const cards = sorted.map((l, i) => {
+    const plats = (Array.isArray(l.platform) ? l.platform : [l.platform||'']).filter(Boolean);
+    const firstMeta = plats.length ? socialMeta(plats[0]) : { color:'#6B7280', bg:'rgba(107,114,128,.1)', svg:'' };
+    const done = Array.isArray(l.doneBy) ? l.doneBy.join(', ') : (l.doneBy||'');
+
+    const platChips = plats.map(p => {
+      const m = socialMeta(p);
+      return `<span class="log-card-plat" style="background:${m.bg};color:${m.color}">${m.svg} ${p}</span>`;
+    }).join('');
+
+    return `
+      <div class="log-card" style="border-top:3px solid ${firstMeta.color};animation-delay:${i*28}ms">
+        <div class="log-card-head">
+          <div class="log-card-task">${l.task||'—'}</div>
+          <div class="log-card-date">${fmtDate(l.date)}</div>
+        </div>
+        <div class="log-card-plats">${platChips}</div>
+        <div class="log-card-foot">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ${l.workType ? `<span class="badge b-gray" style="font-size:10px">${l.workType}</span>` : ''}
+            ${l.timeSpent != null ? `<span class="log-meta">${ico('clock',11)} ${l.timeSpent}h</span>` : ''}
+          </div>
+          ${done ? `<span class="log-meta">${ico('user',11)} ${done}</span>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('logCards').innerHTML = `<div class="log-grid">${cards}</div>`;
+}
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+  try {
+    [_accounts, _log] = await Promise.all([api('/social'), api('/social/log')]);
+
+    buildRightPanel();
+    buildPulse();
+    buildChips();
+    renderLog();
+
+    // Chart
+    const platMap = countByKey(_log, l => Array.isArray(l.platform) ? l.platform : [l.platform]);
+    const pk = Object.keys(platMap);
+    buildChart('chartByPlatform', 'bar', {
+      labels: pk,
+      datasets: [{ label:'Posts', data: Object.values(platMap),
+        backgroundColor: pk.map(p => { const m=socialMeta(p); return m.color!=='#6B7280'?m.color+'CC':'#3B82F6'; }),
+        borderRadius:5, borderWidth:0 }],
+    }, { plugins:{ legend:{ display:false } } });
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('logCards').innerHTML = '<div class="err-msg"><strong>Could not load social data</strong></div>';
+  }
+}
+
+init();
+</script>
+</body>
+</html>

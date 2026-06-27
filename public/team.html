@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Team – DAD Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Balthazar&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/nav.js"></script>
+  <style>
+
+    /* ── Filter chips ── */
+    .tm-chips { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .tm-chip {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:8px 18px; border-radius:50px;
+      border:1.5px solid var(--border); background:var(--white);
+      font-size:13px; font-weight:600; color:var(--txt2);
+      cursor:pointer; transition:all .16s ease;
+      box-shadow:var(--shadow-xs); white-space:nowrap; font-family:var(--font);
+    }
+    .tm-chip:hover { border-color:var(--brand); color:var(--brand); background:var(--brand-lt); }
+    .tm-chip.active { background:var(--sb-active); color:white; border-color:var(--sb-active); box-shadow:0 3px 12px rgba(27,28,49,.26); }
+    .chip-cnt { font-size:11px; font-weight:700; padding:1px 7px; border-radius:50px; }
+    .tm-chip.active .chip-cnt { background:rgba(255,255,255,.22); color:white; }
+    .tm-chip:not(.active) .chip-cnt { background:var(--surface); color:var(--muted); border:1px solid var(--border); }
+
+    /* ── Search ── */
+    .tm-search-wrap {
+      display:flex; align-items:center; gap:8px;
+      background:var(--white); border:1.5px solid var(--border);
+      border-radius:50px; padding:9px 16px; min-width:210px;
+      box-shadow:var(--shadow-xs); transition:all .2s;
+    }
+    .tm-search-wrap:focus-within { border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-lt); }
+    .tm-search-wrap svg { color:var(--muted); flex-shrink:0; }
+    .tm-search-wrap input { border:none; outline:none; background:transparent; font-family:var(--font); font-size:13px; color:var(--txt); width:100%; }
+    .tm-search-wrap input::placeholder { color:var(--muted); }
+
+    /* ── Cards grid ── */
+    #tmCards { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:12px; min-height:180px; }
+
+    /* ── Member card ── */
+    .tm-card {
+      background:var(--white); border:1.5px solid var(--border);
+      border-radius:16px; overflow:hidden;
+      box-shadow:var(--shadow-xs);
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      animation:cardSlide .26s ease both;
+      cursor:pointer;
+    }
+    @keyframes cardSlide { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .tm-card:hover { transform:translateY(-3px); }
+    .tm-card.s-active:hover   { box-shadow:0 8px 28px rgba(16,185,129,.15);  border-color:rgba(16,185,129,.32); }
+    .tm-card.s-inactive:hover { box-shadow:0 8px 28px rgba(239,68,68,.14);   border-color:rgba(239,68,68,.28); }
+    .tm-card.s-other:hover    { box-shadow:0 8px 28px rgba(9,0,113,.10);     border-color:rgba(9,0,113,.22); }
+
+    .tm-accent { height:3.5px; width:100%; }
+    .accent-active   { background:linear-gradient(90deg,#10B981,#34D399); }
+    .accent-inactive { background:linear-gradient(90deg,#EF4444,#F87171); }
+    .accent-other    { background:linear-gradient(90deg,#9CA3AF,#D1D5DB); }
+
+    .tm-card-body { padding:16px 18px 15px; }
+    .tm-card-head { display:flex; align-items:flex-start; gap:13px; margin-bottom:13px; }
+    .tm-av {
+      width:42px; height:42px; border-radius:11px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:15px; font-weight:800; color:#fff; flex-shrink:0;
+      font-family:'Balthazar',Georgia,serif;
+    }
+    .tm-name-wrap { flex:1; min-width:0; }
+    .tm-name  { font-size:13.5px; font-weight:700; color:var(--txt); margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .tm-role  { font-size:11.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .tm-card-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:13px; }
+    .tm-tag {
+      display:inline-flex; align-items:center; gap:4px; padding:3px 9px;
+      border-radius:50px; font-size:10.5px; font-weight:600;
+      background:var(--surface); color:var(--txt2); border:1px solid var(--border);
+    }
+    .tm-card-foot {
+      display:flex; align-items:center; justify-content:space-between;
+      padding-top:11px; border-top:1px solid var(--border-lt); gap:8px; flex-wrap:wrap;
+    }
+    .tm-foot-left  { display:flex; align-items:center; gap:7px; }
+    .tm-view-btn {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:5px 12px; border-radius:8px;
+      border:1.5px solid var(--border); background:var(--white);
+      font-size:11px; font-weight:700; color:var(--txt2);
+      cursor:pointer; transition:all .14s; font-family:var(--font);
+    }
+    .tm-view-btn:hover { border-color:var(--brand); color:var(--brand); background:var(--brand-lt); }
+
+    /* ── Empty state ── */
+    .tm-empty {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:64px 24px; color:var(--muted); gap:12px; text-align:center;
+      grid-column:1/-1;
+    }
+    .tm-empty-icon { width:56px; height:56px; border-radius:16px; background:var(--surface); border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; }
+
+    /* ── Drawer overlay ── */
+    .tm-overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:300; display:none; backdrop-filter:blur(2px); }
+    .tm-overlay.open { display:block; }
+
+    /* ── Member drawer ── */
+    .tm-drawer {
+      position:fixed; top:0; right:-520px; width:480px; height:100vh;
+      background:var(--white); border-left:1.5px solid var(--border);
+      box-shadow:-8px 0 32px rgba(0,0,0,.10);
+      z-index:301; display:flex; flex-direction:column;
+      transition:right .26s cubic-bezier(.4,0,.2,1);
+    }
+    .tm-drawer.open { right:0; }
+
+    .tm-drawer-accent { height:3px; width:100%; position:absolute; top:0; left:0; right:0; }
+    .tm-drawer-head {
+      padding:20px 22px 16px;
+      border-bottom:1.5px solid var(--border-lt);
+      position:relative; flex-shrink:0;
+    }
+    .tm-drawer-close {
+      position:absolute; top:16px; right:18px;
+      width:28px; height:28px; border-radius:7px;
+      border:1.5px solid var(--border); background:var(--white);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; color:var(--muted); transition:all .14s;
+    }
+    .tm-drawer-close:hover { border-color:var(--danger); color:var(--danger); background:var(--danger-t); }
+    .tm-drawer-body { flex:1; overflow-y:auto; padding:18px 22px 32px; }
+    .tm-drawer-body::-webkit-scrollbar { width:4px; }
+    .tm-drawer-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:50px; }
+    .tm-drawer-sec { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin-bottom:9px; margin-top:22px; }
+    .tm-drawer-sec:first-child { margin-top:0; }
+    .tm-drawer-field { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; background:var(--surface); border-radius:10px; margin-bottom:7px; border:1px solid var(--border-lt); }
+    .tm-drawer-field-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:3px; }
+    .tm-drawer-field-val { font-size:12.5px; font-weight:600; color:var(--txt); }
+
+    /* Salary slip rows */
+    .slip-row {
+      display:flex; align-items:center; gap:10px;
+      padding:11px 14px; background:var(--surface);
+      border:1px solid var(--border-lt); border-radius:10px;
+      margin-bottom:7px; transition:border-color .14s;
+    }
+    .slip-row:hover { border-color:var(--border); }
+    .slip-month { font-size:13px; font-weight:700; color:var(--txt); flex:1; min-width:0; }
+    .slip-sub   { font-size:10.5px; color:var(--muted); margin-top:2px; }
+    .slip-amount { font-size:14px; font-weight:800; color:var(--success); flex-shrink:0; }
+
+    /* Right panel */
+    .rp-kpi-row { display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:12px; background:var(--surface); border:1.5px solid var(--border-lt); margin-bottom:7px; transition:transform .14s; }
+    .rp-kpi-row:hover { transform:translateX(2px); }
+    .rp-kpi-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .rp-kpi-body { flex:1; min-width:0; }
+    .rp-kpi-val  { font-size:19px; font-weight:800; color:var(--txt); line-height:1; }
+    .rp-kpi-lbl  { font-size:10.5px; color:var(--muted); margin-top:2px; }
+
+    .pulse-row { margin-bottom:11px; }
+    .pulse-label { display:flex; justify-content:space-between; font-size:11.5px; margin-bottom:4px; }
+    .pulse-name  { font-weight:600; color:var(--txt); }
+    .pulse-count { font-weight:700; color:var(--muted); font-size:11px; }
+    .pulse-bg    { height:6px; background:var(--border-lt); border-radius:50px; overflow:hidden; }
+    .pulse-fill  { height:100%; border-radius:50px; transition:width 1s cubic-bezier(.4,0,.2,1); }
+
+    .watch-item {
+      display:flex; align-items:flex-start; gap:10px;
+      padding:10px 0; border-bottom:1px solid var(--border-lt);
+      cursor:pointer; transition:background .12s;
+    }
+    .watch-item:last-child { border-bottom:none; }
+    .watch-item:hover .watch-name { color:var(--brand); }
+    .watch-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+    .watch-name { font-size:12px; font-weight:700; color:var(--txt); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; transition:color .12s; }
+    .watch-co   { font-size:10.5px; color:var(--muted); margin-top:2px; }
+
+    @media (max-width:700px) {
+      #tmCards { grid-template-columns:1fr; }
+      .tm-banner { grid-template-columns:1fr 1fr; }
+      .tm-drawer { width:100%; right:-100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<!-- Drawer overlay -->
+<div class="tm-overlay" id="tmOverlay" onclick="closeDrawer()"></div>
+
+<!-- Member detail + salary drawer -->
+<div class="tm-drawer" id="tmDrawer">
+  <div class="tm-drawer-head">
+    <div class="tm-drawer-accent" id="drawerAccent"></div>
+    <button class="tm-drawer-close" onclick="closeDrawer()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div style="margin-top:6px;display:flex;align-items:center;gap:12px">
+      <div class="tm-av" id="drawerAv" style="width:38px;height:38px;font-size:13px;border-radius:10px"></div>
+      <div>
+        <div style="font-family:'Balthazar',Georgia,serif;font-size:19px;color:var(--txt);padding-right:36px" id="drawerName">—</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:2px" id="drawerRole">—</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;margin-top:12px" id="drawerBadges"></div>
+  </div>
+  <div class="tm-drawer-body" id="drawerBody"></div>
+</div>
+
+<div class="page-body">
+
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar" style="margin-bottom:22px">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger">&#9776;</button>
+        <div>
+          <div class="page-title" style="display:flex;align-items:center;gap:9px">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Team
+          </div>
+          <div class="page-sub" id="topbarDate"></div>
+        </div>
+        <span class="badge b-green" id="activeBadge" style="display:none"></span>
+      </div>
+      <div class="topbar-right">
+        <a href="https://www.notion.so" target="_blank" rel="noopener noreferrer" class="notion-badge">
+          <img src="/assets/images/notion-logo.svg" alt="Notion" width="18" height="18" style="display:block">
+          <span>Notion</span><span class="notion-dot"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- CHIPS + SEARCH -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap">
+      <div class="tm-chips" id="statusChips"></div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <select id="roleSelect" onchange="_activeRole=this.value;renderCards()"
+          style="display:inline-flex;align-items:center;padding:8px 32px 8px 14px;border-radius:50px;border:1.5px solid var(--border);background:var(--white) url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%238A94A6%22 stroke-width=%222.5%22><polyline points=%226 9 12 15 18 9%22/></svg>') no-repeat right 12px center;background-size:12px;appearance:none;-webkit-appearance:none;font-size:13px;font-weight:600;color:var(--txt2);cursor:pointer;font-family:var(--font);box-shadow:var(--shadow-xs);transition:all .15s;white-space:nowrap">
+          <option value="All">All Roles</option>
+        </select>
+        <div class="tm-search-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="tmSearch" type="text" placeholder="Search members…" autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+    <!-- CARDS -->
+    <div id="tmCards">
+      <div style="grid-column:1/-1" class="loading"><div class="spin"></div>Loading team…</div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="live-feed-panel" id="liveFeedPanel">
+    <div class="rp-card">
+      <div class="rp-header">
+        <div class="rp-title">Team Intelligence</div>
+        <div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#10B981">
+          <span style="width:6px;height:6px;border-radius:50%;background:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,.2);display:inline-block"></span>Live
+        </div>
+      </div>
+      <div class="rp-content" id="rpContent">
+        <div class="loading"><div class="spin"></div></div>
+      </div>
+    </div>
+  </aside>
+
+</div><!-- /.page-body -->
+
+<script src="/assets/dashboard.js"></script>
+<script>
+document.getElementById('topbarDate').textContent =
+  new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+/* ── State ── */
+let _allMembers  = [];
+let _allSalary   = [];
+let _activeStatus = 'All';
+let _activeRole   = 'All';
+let _searchQ      = '';
+
+/* ── Status helpers ── */
+function strStatus(s) {
+  return Array.isArray(s) ? (s[0] || '') : (s || '');
+}
+function sLevel(m) {
+  const s = strStatus(m.status).toLowerCase();
+  if (s === 'active') return 'active';
+  if (s) return 'inactive';
+  return 'other';
+}
+function sColor(lvl) {
+  return lvl === 'active' ? '#10B981' : lvl === 'inactive' ? '#EF4444' : '#9CA3AF';
+}
+function sBg(lvl) {
+  return lvl === 'active' ? 'rgba(16,185,129,.12)' : lvl === 'inactive' ? 'rgba(239,68,68,.12)' : 'rgba(156,163,175,.12)';
+}
+function sDot(c) { return `<svg width="8" height="8" viewBox="0 0 8 8" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="4" cy="4" r="4" fill="${c}"/></svg>`; }
+
+/* ── Avatar colour by name hash ── */
+const AV_POOL = ['#090071','#10B981','#3B82F6','#F59E0B','#8B5CF6','#EF4444','#0891B2','#F97316'];
+function memberColor(name) {
+  let h = 0;
+  for (let i = 0; i < (name||'').length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+  return AV_POOL[Math.abs(h) % AV_POOL.length];
+}
+
+/* ── Filter predicate ── */
+function matches(m) {
+  if (_activeStatus !== 'All' && sLevel(m) !== _activeStatus) return false;
+  if (_activeRole !== 'All' && (m.role||'') !== _activeRole) return false;
+  if (_searchQ) {
+    const q = _searchQ.toLowerCase();
+    const hay = [(m.name||''), (m.role||''), strStatus(m.status), (m.city||''), (m.state||'')].join(' ').toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+/* ── Build banner ── */
+function buildBanner() {
+  const active = _allMembers.filter(m => sLevel(m) === 'active').length;
+  if (active > 0) {
+    const b = document.getElementById('activeBadge');
+    b.textContent = `${active} Active`;
+    b.style.display = '';
+  }
+}
+
+/* ── Filter chips ── */
+function buildChips() {
+  const roles = ['All', ...Array.from(new Set(_allMembers.map(m=>m.role).filter(Boolean))).sort()];
+
+  /* Role dropdown */
+  const sel = document.getElementById('roleSelect');
+  sel.innerHTML = roles.map(r => {
+    const cnt = r === 'All' ? _allMembers.length : _allMembers.filter(m=>m.role===r).length;
+    const lbl = r === 'All' ? `All Roles (${cnt})` : `${r} (${cnt})`;
+    return `<option value="${safeAttr(r)}" ${r===_activeRole?'selected':''}>${esc(lbl)}</option>`;
+  }).join('');
+
+  /* Status chips — count from role+search filtered set */
+  const base = _allMembers.filter(m => {
+    if (_activeRole !== 'All' && (m.role||'') !== _activeRole) return false;
+    if (_searchQ) {
+      const q = _searchQ.toLowerCase();
+      const hay = [(m.name||''),(m.role||''),strStatus(m.status),(m.city||''),(m.state||'')].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const DOT = c => `<svg width="9" height="9" viewBox="0 0 9 9" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="4.5" cy="4.5" r="4.5" fill="${c}"/></svg>`;
+  const statuses = [
+    { key:'All',      label:'All' },
+    { key:'active',   label:`${DOT('#10B981')} Active` },
+    { key:'inactive', label:`${DOT('#EF4444')} Inactive` },
+  ];
+  document.getElementById('statusChips').innerHTML = statuses.map(s => {
+    const cnt = s.key === 'All' ? base.length : base.filter(m=>sLevel(m)===s.key).length;
+    return `<button class="tm-chip${_activeStatus===s.key?' active':''}" data-status="${s.key}" style="display:inline-flex;align-items:center;gap:6px">${s.label}<span class="chip-cnt">${cnt}</span></button>`;
+  }).join('');
+
+  document.querySelectorAll('.tm-chip[data-status]').forEach(btn => {
+    btn.onclick = () => { _activeStatus = btn.dataset.status; buildChips(); renderCards(); };
+  });
+}
+
+/* ── Render cards ── */
+function renderCards() {
+  buildChips();
+  const box  = document.getElementById('tmCards');
+  const list = _allMembers.filter(matches);
+
+  if (!list.length) {
+    box.innerHTML = `<div class="tm-empty">
+      <div class="tm-empty-icon">${ico('users',24)}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--txt2)">No members found</div>
+      <div style="font-size:12px;color:var(--muted)">Try adjusting your filters</div>
+    </div>`;
+    return;
+  }
+
+  box.innerHTML = list.map((m, i) => {
+    const lvl   = sLevel(m);
+    const col   = sColor(lvl);
+    const bg    = sBg(lvl);
+    const av    = initials(m.name||'?');
+    const mc    = memberColor(m.name||'');
+    const loc   = [m.city, m.state].filter(Boolean).join(', ');
+    const slips = _allSalary.filter(s => s.member === m.name);
+
+    return `
+      <div class="tm-card s-${lvl}" style="animation-delay:${i*25}ms" onclick="openDrawer('${i}',${_allMembers.indexOf(m)})">
+        <div class="tm-accent accent-${lvl}"></div>
+        <div class="tm-card-body">
+          <div class="tm-card-head">
+            <div class="tm-av" style="background:${mc}">${esc(av)}</div>
+            <div class="tm-name-wrap">
+              <div class="tm-name" title="${safeAttr(m.name || '')}">${esc(m.name || '—')}</div>
+              <div class="tm-role">${esc(m.role || '—')}</div>
+            </div>
+            <div>${statusBadge(strStatus(m.status))}</div>
+          </div>
+
+          <div class="tm-card-tags">
+            ${loc ? `<span class="tm-tag">${ico('map-pin',10)} ${esc(loc)}</span>` : ''}
+            ${m.salary != null ? `<span class="tm-tag">${ico('credit-card',10)} ₹${Number(m.salary).toLocaleString('en-IN')}/mo</span>` : ''}
+            ${m.joinDate ? `<span class="tm-tag">${ico('calendar',10)} ${fmtDate(m.joinDate)}</span>` : ''}
+          </div>
+
+          <div class="tm-card-foot">
+            <div class="tm-foot-left">
+              <span class="badge" style="background:${bg};color:${col};border:none;font-size:10.5px">${sDot(col)} ${esc(strStatus(m.status) || 'Unknown')}</span>
+              ${slips.length ? `<span style="font-size:10.5px;color:var(--muted)">${ico('file-text',10)} ${slips.length} slip${slips.length!==1?'s':''}</span>` : ''}
+            </div>
+            <button class="tm-view-btn" onclick="event.stopPropagation();openDrawer('${i}',${_allMembers.indexOf(m)})">${ico('eye',11)} View</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ── Detail drawer ── */
+function openDrawer(cardIdx, memberIdx) {
+  const m   = _allMembers[memberIdx];
+  if (!m) return;
+
+  const lvl = sLevel(m);
+  const col = sColor(lvl);
+  const mc  = memberColor(m.name||'');
+
+  document.getElementById('drawerAccent').className = `tm-drawer-accent accent-${lvl}`;
+  document.getElementById('drawerAv').textContent = initials(m.name||'?');
+  document.getElementById('drawerAv').style.background = mc;
+  document.getElementById('drawerName').textContent = m.name||'—';
+  document.getElementById('drawerRole').textContent = m.role||'—';
+  document.getElementById('drawerBadges').innerHTML =
+    `<span class="badge" style="background:${sBg(lvl)};color:${col};border:none">${sDot(col)} ${esc(strStatus(m.status) || 'Unknown')}</span>`;
+
+  /* ── Contact & Employment ── */
+  const fields = [
+    { icon:'mail',        lbl:'Email',           val:m.email },
+    { icon:'phone',       lbl:'Phone',           val:m.phone },
+    { icon:'map-pin',     lbl:'Location',        val:[m.city,m.state].filter(Boolean).join(', ')||null },
+    { icon:'calendar',    lbl:'Joined',          val:m.joinDate ? fmtDate(m.joinDate) : null },
+    { icon:'credit-card', lbl:'Monthly Salary',  val:m.salary != null ? `₹${Number(m.salary).toLocaleString('en-IN')}` : null, green:true },
+  ].filter(f => f.val);
+
+  /* ── Salary slips for this member ── */
+  const slips = _allSalary
+    .filter(s => s.member === m.name)
+    .sort((a,b) => {
+      const da = a.paymentDate || a.paymentMonth || '';
+      const db = b.paymentDate || b.paymentMonth || '';
+      return db.localeCompare(da);
+    });
+
+  const slipHtml = slips.length === 0
+    ? `<div style="text-align:center;padding:24px 0;color:var(--muted);font-size:12.5px">${ico('file-text',20)}<br><span style="display:block;margin-top:8px">No salary records found</span></div>`
+    : slips.map(s => {
+        const status = strStatus(s.status);
+        const slipLvl = status.toLowerCase().includes('paid') ? 'active' : status.toLowerCase().includes('pending') ? 'other' : 'inactive';
+        const slipCol = sColor(slipLvl);
+        const slipBg  = sBg(slipLvl);
+        return `<div class="slip-row">
+          <div style="flex:1;min-width:0">
+            <div class="slip-month">${esc(s.month || s.paymentMonth || '—')}</div>
+            <div class="slip-sub">
+              ${s.paymentDate ? fmtDate(s.paymentDate) : ''}
+              ${s.paymentMode ? ` · ${esc(s.paymentMode)}` : ''}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span class="badge" style="background:${slipBg};color:${slipCol};border:none;font-size:10px">${esc(status || '—')}</span>
+            <div class="slip-amount">${s.amount != null ? '₹'+Number(s.amount).toLocaleString('en-IN') : '—'}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+  const totalPaid = slips.filter(s=>strStatus(s.status).toLowerCase().includes('paid')).reduce((t,s)=>(t+(s.amount||0)),0);
+
+  document.getElementById('drawerBody').innerHTML = `
+    <div class="tm-drawer-sec">Contact &amp; Employment</div>
+    ${fields.map(f=>`
+      <div class="tm-drawer-field">
+        <div style="color:var(--brand);flex-shrink:0;margin-top:2px">${ico(f.icon,14)}</div>
+        <div>
+          <div class="tm-drawer-field-lbl">${esc(f.lbl)}</div>
+          <div class="tm-drawer-field-val" ${f.green?'style="color:var(--success)"':''}>${f.icon==='mail'?`<a href="mailto:${safeAttr(f.val)}" style="color:var(--primary)">${esc(f.val)}</a>`:esc(f.val)}</div>
+        </div>
+      </div>`).join('')}
+
+    <div class="tm-drawer-sec" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Salary Slips <span style="font-weight:500;opacity:.65">(${slips.length})</span></span>
+      ${totalPaid > 0 ? `<span style="font-size:11px;color:var(--success);font-weight:700">Total paid ₹${totalPaid.toLocaleString('en-IN')}</span>` : ''}
+    </div>
+    ${slipHtml}`;
+
+  document.getElementById('tmDrawer').classList.add('open');
+  document.getElementById('tmOverlay').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('tmDrawer').classList.remove('open');
+  document.getElementById('tmOverlay').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+/* ── Right panel ── */
+function buildRightPanel() {
+  const active   = _allMembers.filter(m => sLevel(m) === 'active');
+  const inactive = _allMembers.filter(m => sLevel(m) === 'inactive');
+  const salary   = _allMembers.reduce((s,m) => s + (m.salary||0), 0);
+
+  /* By role bars */
+  const roleMap = {};
+  _allMembers.forEach(m => { const r = m.role||'Other'; roleMap[r]=(roleMap[r]||0)+1; });
+  const roleMax = Math.max(...Object.values(roleMap), 1);
+  const roleBars = Object.entries(roleMap).sort(([,a],[,b])=>b-a).slice(0,6).map(([r,n])=>`
+    <div class="pulse-row">
+      <div class="pulse-label">
+        <span class="pulse-name">${esc(r)}</span>
+        <span class="pulse-count">${n}</span>
+      </div>
+      <div class="pulse-bg">
+        <div class="pulse-fill" style="width:0%;background:var(--brand)" data-pct="${Math.round(n/roleMax*100)}"></div>
+      </div>
+    </div>`).join('');
+
+  /* Active member watchlist */
+  const watchlist = active.slice(0, 6);
+
+  document.getElementById('rpContent').innerHTML = `
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;margin-top:4px">At a Glance</div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(9,0,113,.1);color:var(--brand)">${ico('users',15)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${_allMembers.length}</div><div class="rp-kpi-lbl">Total Tracked</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(16,185,129,.1);color:#10B981">${ico('check-circle',15)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val" style="color:#10B981">${active.length}</div><div class="rp-kpi-lbl">Active Members</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(239,68,68,.1);color:#EF4444">${ico('user-x',15)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val" style="color:${inactive.length?'#EF4444':'var(--txt)'}">${inactive.length}</div><div class="rp-kpi-lbl">Inactive</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(9,0,113,.08);color:var(--brand)">${ico('credit-card',15)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val" style="font-size:14px">${fmtMoney(salary)}</div><div class="rp-kpi-lbl">Monthly Payroll</div></div>
+    </div>
+    <div class="rp-kpi-row">
+      <div class="rp-kpi-icon" style="background:rgba(139,92,246,.1);color:#8B5CF6">${ico('briefcase',15)}</div>
+      <div class="rp-kpi-body"><div class="rp-kpi-val">${Object.keys(roleMap).length}</div><div class="rp-kpi-lbl">Unique Roles</div></div>
+    </div>
+
+    <div style="height:1px;background:var(--border-lt);margin:16px 0"></div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:12px">By Role</div>
+    ${roleBars || '<div style="font-size:12px;color:var(--muted)">No role data</div>'}
+
+    <div style="height:1px;background:var(--border-lt);margin:16px 0"></div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px">Active Members</div>
+    ${watchlist.length === 0
+      ? `<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px 0">${ico('users',18)}<br><span style="margin-top:6px;display:block">No active members</span></div>`
+      : watchlist.map((m,i) => {
+          const mc = memberColor(m.name||'');
+          return `<div class="watch-item" onclick="openDrawer('${i}',${_allMembers.indexOf(m)})">
+            <div class="watch-dot" style="background:${mc};box-shadow:0 0 0 3px ${mc}22;margin-top:5px"></div>
+            <div style="flex:1;min-width:0">
+              <div class="watch-name">${esc(m.name || '—')}</div>
+              <div class="watch-co">${esc(m.role || '—')}</div>
+            </div>
+            <span class="badge" style="background:rgba(16,185,129,.12);color:#10B981;border:none;font-size:10px;flex-shrink:0">${sDot('#10B981')} Active</span>
+          </div>`;
+        }).join('')}`;
+
+  /* Animate bars */
+  setTimeout(() => {
+    document.querySelectorAll('.pulse-fill[data-pct]').forEach(b => { b.style.width = b.dataset.pct + '%'; });
+  }, 120);
+}
+
+/* ── Search ── */
+document.getElementById('tmSearch').addEventListener('input', function() {
+  _searchQ = this.value.trim();
+  renderCards();
+});
+
+/* ── Init ── */
+async function init() {
+  try {
+    [_allMembers, _allSalary] = await Promise.all([
+      api('/team'),
+      api('/team/salary'),
+    ]);
+    buildBanner();
+    buildChips();
+    buildRightPanel();
+    renderCards();
+  } catch(e) {
+    document.getElementById('tmCards').innerHTML =
+      `<div class="tm-empty">
+        <div class="tm-empty-icon">${ico('alert-triangle',24)}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--danger)">Failed to load</div>
+        <div style="font-size:12px;color:var(--muted)">Could not load team data. Check your Notion connection.</div>
+      </div>`;
+    console.error(e);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DAD — Operations Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Balthazar&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="/assets/nav.js"></script>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar"></aside>
+
+<div class="page-body">
+
+  <!-- ══════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar" style="margin-bottom:20px">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger">&#9776;</button>
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub" id="dateLabel"></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <a href="https://www.notion.so" target="_blank" rel="noopener noreferrer" class="notion-badge">
+          <img src="/assets/images/notion-logo.svg" alt="Notion" width="18" height="18" style="display:block">
+          <span>Notion</span>
+          <span class="notion-dot"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- COMPANY PROFILE CARD -->
+    <div class="company-card" id="companyCard">
+      <div class="company-card-inner">
+
+        <!-- DAD LOGO AVATAR -->
+        <div class="company-avatar" style="padding:0;overflow:hidden;border-radius:18px;flex-shrink:0">
+          <img src="/assets/images/dad-logo.png"
+               alt="Doctors At Door"
+               style="width:76px;height:76px;object-fit:cover;display:block;border-radius:18px">
+        </div>
+
+        <div class="company-info" style="flex:1;min-width:0">
+          <div class="company-name-row">
+            <span class="company-name">Doctors At Door</span>
+            <span class="badge-live">
+              <span class="badge-live-dot"></span>Live
+            </span>
+          </div>
+          <div class="company-sub">Healthcare Ecosystem Platform &middot; <span id="teamCountSub">—</span> operators on the team</div>
+
+          <!-- Meta grid: 2 columns -->
+          <div class="company-meta-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-top:10px">
+            <div class="company-meta-row">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <a href="mailto:dadclinic@gmail.com" style="color:inherit;text-decoration:none" class="meta-link">dadclinic@gmail.com</a>
+            </div>
+            <div class="company-meta-row">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <a href="https://www.doctorsatdoor.com/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none" class="meta-link">doctorsatdoor.com</a>
+            </div>
+            <div class="company-meta-row">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Healthcare Ecosystem
+            </div>
+            <div class="company-meta-row">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              Operations Command Center
+            </div>
+          </div>
+
+          <!-- Legal Documents -->
+          <div style="margin-top:16px">
+            <div style="font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:9px">Legal Documents</div>
+            <div style="display:flex;flex-wrap:wrap;gap:7px">
+              <button class="doc-chip" onclick="openPdf('/assets/images/Docs/START%20UP%20CERTIFICATE.pdf','Startup Certificate')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Startup Certificate
+              </button>
+              <button class="doc-chip" onclick="openPdf('/assets/images/Docs/DAD%20PAN%20CARD.pdf','DAD PAN Card')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                PAN Card
+              </button>
+              <button class="doc-chip" onclick="openPdf('/assets/images/Docs/INCORPORATION%20CERTIFICATE.pdf','Incorporation Certificate')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Incorporation Certificate
+              </button>
+              <button class="doc-chip" onclick="openPdf('/assets/images/Docs/MSME%20CERTIFICATE.pdf','MSME Certificate')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                MSME Certificate
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Social circles — right side -->
+        <div class="social-circles">
+          <a href="https://www.facebook.com/doctorsatdoor.offical" target="_blank" rel="noopener" class="social-circle">
+            <img src="/assets/images/facebook.svg" alt="Facebook" width="20" height="20">
+            <span class="social-tip">doctorsatdoor.offical</span>
+          </a>
+          <a href="https://instagram.com/doctorsatdoor" target="_blank" rel="noopener" class="social-circle">
+            <img src="/assets/images/instagram.svg" alt="Instagram" width="20" height="20">
+            <span class="social-tip">@doctorsatdoor</span>
+          </a>
+          <a href="https://x.com/doctors_at_door" target="_blank" rel="noopener" class="social-circle">
+            <img src="/assets/images/twitter.svg" alt="X" width="20" height="20">
+            <span class="social-tip">@doctors_at_door</span>
+          </a>
+          <a href="https://youtube.com/@doctorsatdoor" target="_blank" rel="noopener" class="social-circle">
+            <img src="/assets/images/youtube.svg" alt="YouTube" width="20" height="20">
+            <span class="social-tip">@doctorsatdoor</span>
+          </a>
+          <a href="https://www.doctorsatdoor.com/" target="_blank" rel="noopener" class="social-circle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#4B5563"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span class="social-tip">doctorsatdoor.com</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="company-stats" id="companyStats">
+        <div class="company-stat">
+          <div class="company-stat-label">Team Members</div>
+          <div class="company-stat-value" id="statTeam"><div class="spin" style="margin:4px 0"></div></div>
+          <div class="stat-bar"><div class="stat-bar-fill bar-red" id="barTeam" style="width:0%"></div></div>
+        </div>
+        <div class="company-stat">
+          <div class="company-stat-label">Applications</div>
+          <div class="company-stat-value" id="statApps"><div class="spin" style="margin:4px 0"></div></div>
+          <div class="stat-bar"><div class="stat-bar-fill bar-blue" id="barApps" style="width:0%"></div></div>
+        </div>
+        <div class="company-stat">
+          <div class="company-stat-label">Open Tasks</div>
+          <div class="company-stat-value" id="statTasks"><div class="spin" style="margin:4px 0"></div></div>
+          <div class="stat-bar"><div class="stat-bar-fill bar-orange" id="barTasks" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCE SNAPSHOT + TASK STATUS -->
+    <div class="dash-grid-2">
+      <div id="financeSnapshotCard" class="dash-grid-card" style="background:white;border-radius:20px;border:1.5px solid var(--border);padding:22px 24px;box-shadow:var(--shadow-sm);overflow:hidden;min-width:0">
+        <div class="loading"><div class="spin"></div></div>
+      </div>
+      <div id="taskStatusCard" class="dash-grid-card" style="background:white;border-radius:20px;border:1.5px solid var(--border);padding:22px 24px;box-shadow:var(--shadow-sm);overflow:hidden;min-width:0">
+        <div class="loading"><div class="spin"></div></div>
+      </div>
+    </div>
+
+    <!-- TEAM OVERVIEW -->
+    <div class="sec-hd">
+      <div class="sec-title">Team Overview</div>
+      <button class="sec-expand" onclick="window.location='/team'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+    <div id="dashTeamCard" style="background:white;border-radius:20px;border:1.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:20px;display:flex;flex-direction:column">
+      <div class="loading"><div class="spin"></div>Loading…</div>
+    </div>
+
+    <!-- APPLICATION PHASE UPDATE -->
+    <div class="sec-hd">
+      <div class="sec-title">Application Phase Update (<span id="appsCount">—</span>)</div>
+      <button class="sec-expand" onclick="window.location='/apps?tab=phases'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+    <div class="apps-scroll" id="appsGrid">
+      <div class="loading"><div class="spin"></div>Loading…</div>
+    </div>
+
+  </main>
+
+  <!-- ══════════════════════════════════════
+       RIGHT PANEL — Tools Updates
+  ══════════════════════════════════════ -->
+  <aside class="live-feed-panel" id="liveFeedPanel" style="overflow-y:auto;gap:10px">
+    <div class="rp-card" style="flex:1;min-height:0">
+
+      <!-- Header -->
+      <div class="rp-header">
+        <div class="rp-title">Tools Updates</div>
+        <div class="rp-toggle">
+          <!-- Bell = Reminders (default active) -->
+          <button class="rp-toggle-btn active" id="rpBtnReminders" title="Reminders">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </button>
+          <!-- Layers = Assets & Tools -->
+          <button class="rp-toggle-btn" id="rpBtnAssets" title="Assets & Tools">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Content (populated by JS) -->
+      <div class="rp-content" id="rpContent">
+        <div class="loading"><div class="spin"></div></div>
+      </div>
+
+    </div>
+
+    <!-- ⚠️ THREAT WATCH card -->
+    <div class="rp-card" style="flex-shrink:0;height:auto">
+      <div class="rp-header">
+        <div class="rp-title">⚠️ Threat Watch</div>
+        <a href="/competitors" style="font-size:11px;font-weight:700;color:var(--brand);text-decoration:none;white-space:nowrap">View all →</a>
+      </div>
+      <div style="padding:10px 14px 12px" id="threatWatchContent">
+        <div class="loading"><div class="spin"></div></div>
+      </div>
+    </div>
+
+  </aside>
+
+</div><!-- .page-body -->
+
+<!-- PDF Modal -->
+<div class="pdf-modal" id="pdfModal">
+  <div class="pdf-modal-overlay" onclick="closePdfModal()"></div>
+  <div class="pdf-modal-box">
+    <div class="pdf-modal-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span id="pdfModalTitle">Document</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <a id="pdfModalDownload" href="#" download class="pdf-modal-action-btn" title="Download">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </a>
+        <button onclick="closePdfModal()" class="pdf-modal-close" title="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <iframe id="pdfModalFrame" src="" class="pdf-modal-frame"></iframe>
+  </div>
+</div>
+
+<script src="/assets/dashboard.js"></script>
+<script>
+  document.getElementById('dateLabel').textContent =
+    new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  initDashboard();
+
+  function openPdf(src, title) {
+    document.getElementById('pdfModalTitle').textContent = title;
+    document.getElementById('pdfModalFrame').src = src;
+    document.getElementById('pdfModalDownload').href = src;
+    document.getElementById('pdfModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closePdfModal() {
+    document.getElementById('pdfModal').classList.remove('open');
+    document.getElementById('pdfModalFrame').src = '';
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePdfModal(); });
+
+  /* ── Threat Watch widget ── */
+  (async function loadThreatWatch() {
+    const box = document.getElementById('threatWatchContent');
+    try {
+      const data = await fetch('/api/competitors').then(r => r.ok ? r.json() : null);
+      const list = (data?.data || []).filter(c => {
+        const t = (c.threatLevel || '').toLowerCase();
+        return t.includes('high') || t.includes('medium');
+      }).sort((a, b) => {
+        const o = (s) => s.toLowerCase().includes('high') ? 0 : 1;
+        return o(a.threatLevel||'') - o(b.threatLevel||'');
+      });
+      if (!list.length) {
+        box.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:10px 0">No active threats tracked</div>';
+        return;
+      }
+      box.innerHTML = list.slice(0, 5).map(c => {
+        const isHigh = (c.threatLevel||'').toLowerCase().includes('high');
+        const pill = isHigh
+          ? `<span class="badge b-red" style="flex-shrink:0;font-size:10px">${c.threatLevel}</span>`
+          : `<span class="badge b-yellow" style="flex-shrink:0;font-size:10px">${c.threatLevel}</span>`;
+        const note = c.notes ? (Array.isArray(c.notes) ? c.notes[0] : c.notes) : '';
+        return `<div style="display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid var(--border-lt);cursor:pointer" onclick="window.location='/competitors'">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</div>
+            ${note ? `<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${note}</div>` : ''}
+          </div>
+          ${pill}
+        </div>`;
+      }).join('') + `<div style="margin-top:8px"><a href="/competitors" style="font-size:11px;font-weight:700;color:var(--brand);text-decoration:none">Full analysis →</a></div>`;
+    } catch (_) {
+      if (box) box.innerHTML = '<div style="font-size:11px;color:var(--muted)">Unable to load threat data</div>';
+    }
+  })();
+</script>
+</body>
+</html>
