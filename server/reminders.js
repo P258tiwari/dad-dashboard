@@ -1,6 +1,5 @@
 require('dotenv').config();
 const nodemailer = require('nodemailer');
-const axios = require('axios');
 const { getReminders } = require('./notion');
 
 const transporter = nodemailer.createTransport({
@@ -41,7 +40,7 @@ async function sendReminders() {
       if (via.includes('WhatsApp') && r.phone && process.env.CALLMEBOT_API_KEY) {
         const msg = `🔔 DAD Reminder: "${r.title}" is due ${daysText} (${r.date})`;
         const url = `https://api.callmebot.com/whatsapp.php?phone=${r.phone}&text=${encodeURIComponent(msg)}&apikey=${process.env.CALLMEBOT_API_KEY}`;
-        await axios.get(url, { timeout: 10000 }).catch(e => console.error('WhatsApp error:', e.message));
+        await fetch(url, { signal: AbortSignal.timeout(10000) }).catch(e => console.error('WhatsApp error:', e.message));
       }
 
       sent++;

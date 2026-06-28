@@ -39,7 +39,6 @@ const TTL = 60_000;
 function getCached(key) {
   const e = cache.get(key);
   if (e && Date.now() - e.t < TTL) return e.d;
-  cache.delete(key);
   return null;
 }
 function setCached(key, d) { cache.set(key, { d, t: Date.now() }); return d; }
@@ -801,7 +800,6 @@ async function getKPIs() {
 }
 
 module.exports = {
-  DB, notion,
   getTeamMembers, getMemberBySlug,
   getAttendanceForMember, getTodayAttendance, createCheckIn, updateCheckOut,
   getFinanceSummary, getToolsAssets, getToolsTransactions,

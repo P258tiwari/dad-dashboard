@@ -43,7 +43,6 @@ function esc(value) {
     "'": '&#39;',
   }[ch]));
 }
-function safeAttr(value) { return esc(value); }
 function safeUrl(value) {
   try {
     const url = new URL(value, window.location.origin);
@@ -240,8 +239,8 @@ async function loadTodayReminders() {
       const freq = (r.frequency || '').toLowerCase();
       const canAdvance = freq && freq !== 'once' && freq !== 'one time' && freq !== 'one-time';
       const safeId   = String(r.id || '').replace(/[^a-zA-Z0-9-]/g,'');
-      const safeFreq = safeAttr(r.frequency || '');
-      const safeDate = safeAttr(r.date || '');
+      const safeFreq = esc(r.frequency || '');
+      const safeDate = esc(r.date || '');
 
       return `
         <div class="r-banner-card" data-urgency="${urgency}" id="rbc-${safeId}">
@@ -417,17 +416,16 @@ function socialUrl(platform, handle) {
 // ── Company card + topbar avatars ─────────────────────────────
 async function loadCompanyCard() {
   try {
-    const [kpis, members, tasks, apps, social] = await Promise.all([
-      api('/kpis').catch(()=>({})),
+    const [members, tasks, apps, social] = await Promise.all([
       api('/team').catch(()=>[]),
       api('/tasks').catch(()=>[]),
       api('/apps').catch(()=>[]),
       api('/social').catch(()=>[]),
     ]);
 
-    const teamCount  = members.length || kpis.activeTeamMembers || 0;
-    const appsCount  = apps.length    || 0;
-    const openTasks  = tasks.filter(t => !['done','complete','cancelled'].includes((t.status||'').toLowerCase())).length || kpis.activeTasks || 0;
+    const teamCount = members.length;
+    const appsCount = apps.length;
+    const openTasks = tasks.filter(t => !['done','complete','cancelled'].includes((t.status||'').toLowerCase())).length;
 
     // Company sub
     const sub = el('teamCountSub'); if (sub) sub.textContent = teamCount;
@@ -447,7 +445,7 @@ async function loadCompanyCard() {
     const topAv = el('topbarAvatars');
     if (topAv && members.length) {
       topAv.innerHTML = members.slice(0,3).map((m,i) =>
-        `<div class="av" style="background:${avColor(i+3)}" title="${safeAttr(m.name)}">${esc(initials(m.name))}</div>`
+        `<div class="av" style="background:${avColor(i+3)}" title="${esc(m.name)}">${esc(initials(m.name))}</div>`
       ).join('');
     }
 
@@ -457,7 +455,7 @@ async function loadCompanyCard() {
     const onlineAv = el('onlineAvatars');
     if (onlineAv) {
       onlineAv.innerHTML = online.map((m,i) =>
-        `<div class="av" style="background:${avColor(i)}" title="${safeAttr(m.name)}">${esc(initials(m.name))}</div>`
+        `<div class="av" style="background:${avColor(i)}" title="${esc(m.name)}">${esc(initials(m.name))}</div>`
       ).join('');
     }
 
@@ -470,9 +468,9 @@ async function loadCompanyCard() {
       const dot = isActive ? `<span style="width:5px;height:5px;border-radius:50%;background:#10B981;display:inline-block;flex-shrink:0"></span>` : '';
       const href = safeUrl(url || socialUrl(platform, handle));
       if (!href) return '';
-      return `<a href="${safeAttr(href)}" target="_blank" rel="noopener noreferrer"
+      return `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer"
           style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;background:${meta.bg};border:1px solid ${meta.color}28;text-decoration:none;transition:opacity .15s"
-          title="${safeAttr(meta.label + fmtF)}">
+          title="${esc(meta.label + fmtF)}">
           <span style="color:${meta.color};display:flex;align-items:center">${meta.svg}</span>
           ${dot}
           <span style="font-size:11px;font-weight:600;color:${meta.color}">${esc(handle || meta.label)}</span>
@@ -504,9 +502,9 @@ async function loadSummaryCards() {
     const now = new Date();
     const ts  = now.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) + ', ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
 
-    const [tasks, kpis, reminders] = await Promise.all([
+    const [tasks, apps, reminders] = await Promise.all([
       api('/tasks').catch(()=>[]),
-      api('/kpis').catch(()=>({})),
+      api('/apps').catch(()=>[]),
       api('/reminders').catch(()=>[]),
     ]);
 
@@ -517,7 +515,7 @@ async function loadSummaryCards() {
     }).length;
 
     // Apps in development
-    const appsInDev = kpis.appsInDevelopment ?? 0;
+    const appsInDev = apps.filter(a => (a.status||'').toLowerCase().includes('development')).length;
 
     // Renewals due within 30 days
     const today = localToday();
@@ -804,7 +802,7 @@ async function loadAppsGrid() {
         <div class="app-card-slim" style="border-color:${col}28;box-shadow:0 2px 12px ${col}12">
           <div style="font-size:12.5px;font-weight:700;color:var(--txt);line-height:1.4;
             display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"
-            title="${safeAttr(p.name || '')}">${esc(p.name || '—')}</div>
+            title="${esc(p.name || '')}">${esc(p.name || '—')}</div>
           <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;
             border-radius:20px;background:${col}14;border:1px solid ${col}30;align-self:flex-start">
             <span style="width:5px;height:5px;border-radius:50%;background:${col};flex-shrink:0"></span>
@@ -940,7 +938,7 @@ async function loadAppsGrid() {
     const chipsHtml = `
       <div class="rp-chips-wrap">
         <div class="rp-filter-chips">
-          ${statuses.map(s => `<button class="rp-chip${s === chipFilter ? ' active' : ''}" data-chip="${safeAttr(s)}">${esc(s)}</button>`).join('')}
+          ${statuses.map(s => `<button class="rp-chip${s === chipFilter ? ' active' : ''}" data-chip="${esc(s)}">${esc(s)}</button>`).join('')}
         </div>
       </div>`;
 
@@ -984,7 +982,7 @@ async function loadAppsGrid() {
                 ${cyc ? `<span style="font-size:11px;color:#D1D5DB">•</span><span style="font-size:11px;color:#9CA3AF">${esc(cyc)}</span>` : ''}
                 ${domain ? `
                   <span style="font-size:11px;color:#D1D5DB">•</span>
-                  <a href="${safeAttr(website)}" target="_blank" rel="noopener noreferrer"
+                  <a href="${esc(website)}" target="_blank" rel="noopener noreferrer"
                      style="font-size:11px;color:#6B7280;text-decoration:none;display:inline-flex;align-items:center;gap:3px;transition:color .14s"
                      onmouseover="this.style.color='#090071'" onmouseout="this.style.color='#6B7280'">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>

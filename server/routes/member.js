@@ -2,7 +2,7 @@ const express = require('express');
 const router  = express.Router();
 const path    = require('path');
 const fs      = require('fs');
-const { getTeamMembers } = require('../notion');
+const { getMemberBySlug } = require('../notion');
 
 const RESERVED = new Set([
   'login', 'api', 'assets', 'member', 'team', 'finance', 'marketing', 'apps',
@@ -14,12 +14,7 @@ router.get('/:name', async (req, res, next) => {
   if (RESERVED.has(slug)) return next();
 
   try {
-    const members = await getTeamMembers();
-    const member = members.find(m => {
-      const parts = (m.name || '').toLowerCase().split(/\s+/);
-      return parts[0] === slug || (m.name || '').toLowerCase().replace(/\s+/g, '-') === slug;
-    });
-
+    const member = await getMemberBySlug(slug);
     if (!member) return next(); // fall through to 404
 
     const templatePath = path.join(__dirname, '../../public/member/index.html');
