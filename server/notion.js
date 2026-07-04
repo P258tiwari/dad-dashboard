@@ -43,6 +43,21 @@ function getCached(key) {
 }
 function setCached(key, d) { cache.set(key, { d, t: Date.now() }); return d; }
 
+// In-flight de-dup: several routes (e.g. apps/phases/roadmap) query the same
+// DB at once — share one Notion request instead of firing N.
+const inFlight = new Map();
+
+// Notion rate-limits at ~3 req/sec; retry once on 429 instead of failing the page.
+async function queryWithRetry(params) {
+  try {
+    return await notion.databases.query(params);
+  } catch (err) {
+    if (err.code !== 'rate_limited' && err.status !== 429) throw err;
+    await new Promise(r => setTimeout(r, 500));
+    return notion.databases.query(params);
+  }
+}
+
 // Returns { "uuid-without-dashes": "Member Name", ... }
 async function getMemberMap() {
   const members = await getTeamMembers();
@@ -107,22 +122,31 @@ async function queryAll(dbId, opts = {}) {
   const key = `${dbId}:${JSON.stringify(opts)}`;
   const hit = getCached(key);
   if (hit) return hit;
+  if (inFlight.has(key)) return inFlight.get(key);
 
-  const results = [];
-  let cursor;
-  do {
-    const r = await notion.databases.query({
-      database_id: dbId,
-      filter:       opts.filter,
-      sorts:        opts.sorts,
-      start_cursor: cursor,
-      page_size:    100,
-    });
-    results.push(...r.results);
-    cursor = r.has_more ? r.next_cursor : null;
-  } while (cursor);
+  const promise = (async () => {
+    const results = [];
+    let cursor;
+    do {
+      const r = await queryWithRetry({
+        database_id: dbId,
+        filter:       opts.filter,
+        sorts:        opts.sorts,
+        start_cursor: cursor,
+        page_size:    100,
+      });
+      results.push(...r.results);
+      cursor = r.has_more ? r.next_cursor : null;
+    } while (cursor);
+    return setCached(key, results);
+  })();
 
-  return setCached(key, results);
+  inFlight.set(key, promise);
+  try {
+    return await promise;
+  } finally {
+    inFlight.delete(key);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
