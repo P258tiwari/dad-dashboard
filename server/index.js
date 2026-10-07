@@ -86,6 +86,7 @@ app.use('/assets', express.static(path.join(__dirname, '../public/assets'), {
   etag:   true,
   setHeaders(res, filePath) {
     if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-store');
+    if (/\.(js|css)$/.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
   },
 }));
 

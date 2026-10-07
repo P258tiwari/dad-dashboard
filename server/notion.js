@@ -812,7 +812,10 @@ async function getKPIs() {
     getTeamMembers(), getMasterTasks(), getAdsCampaigns(), getApplications(), getFinanceSummary(),
   ]);
   return {
-    activeTeamMembers:  team.filter(m => (m.status || '').toLowerCase() === 'active').length,
+    activeTeamMembers:  team.filter(m =>
+      (Array.isArray(m.status) ? m.status : [m.status])
+        .some(status => String(status || '').toLowerCase() === 'active')
+    ).length,
     thisMonthRevenue:   finance.thisMonth.credit,
     activeTasks:        tasks.filter(t => {
       const s = (t.status || '').toLowerCase();

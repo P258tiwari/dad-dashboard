@@ -43,6 +43,9 @@ function esc(value) {
     "'": '&#39;',
   }[ch]));
 }
+// Escape values interpolated into quoted HTML attributes.
+function safeAttr(value) { return esc(value); }
+
 function safeUrl(value) {
   try {
     const url = new URL(value, window.location.origin);
