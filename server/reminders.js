@@ -72,7 +72,7 @@ function buildEmail(r, daysText) {
       </div>
     </div>
     <div style="text-align:center;font-size:11px;color:#a0a0c0;margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1)">
-      Automated reminder · Doctors At Door · team.doctoratdoor.com
+      Automated reminder · Doctors At Door · dashboard.doctorsatdoor.com
     </div>
   </div>
 </body></html>`;

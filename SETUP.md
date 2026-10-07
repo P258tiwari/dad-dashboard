@@ -1,7 +1,7 @@
 # DAD Dashboard — Setup Guide
 
 **Doctors At Door Operations Dashboard**  
-Self-hosted Node.js + Express · Notion API · team.doctoratdoor.com
+Self-hosted Node.js + Express · Notion API · dashboard.doctorsatdoor.com
 
 ---
 
@@ -194,7 +194,7 @@ Point your domain to your server's IP:
 
 ```
 # DNS A Record
-team.doctoratdoor.com  →  YOUR_SERVER_IP
+dashboard.doctorsatdoor.com  →  YOUR_SERVER_IP
 ```
 
 ---
@@ -222,7 +222,7 @@ pm2 stop dad-dashboard    # Stop
 ```nginx
 server {
     listen 80;
-    server_name team.doctoratdoor.com;
+    server_name dashboard.doctorsatdoor.com;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -239,7 +239,7 @@ server {
 For SSL with Let's Encrypt:
 ```bash
 sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d team.doctoratdoor.com
+sudo certbot --nginx -d dashboard.doctorsatdoor.com
 ```
 
 ---

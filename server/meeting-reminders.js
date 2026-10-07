@@ -17,7 +17,7 @@ async function sendMeetingReminders() {
       await transport.sendMail({
         from: `"DAD Meetings" <${process.env.EMAIL_FROM}>`, to: process.env.EMAIL_TO,
         subject: `[DAD ${event.kind === 'meeting' ? 'Meeting' : 'Follow-up'}] ${latest.title.replace(/[\r\n]/g, ' ')}`,
-        text: `${latest.title}\nWhen: ${date} IST\nWith: ${event.kind === 'followUp' ? latest.followUpPerson || latest.person : latest.person}\nPost: ${latest.designation}\nEntity: ${latest.entity}\nDAD owner: ${latest.owner}\n${event.kind === 'followUp' ? latest.followUpAction : latest.agenda}\n\nView details: https://team.doctoratdoor.com/meetings?meeting=${latest.id}`,
+        text: `${latest.title}\nWhen: ${date} IST\nWith: ${event.kind === 'followUp' ? latest.followUpPerson || latest.person : latest.person}\nPost: ${latest.designation}\nEntity: ${latest.entity}\nDAD owner: ${latest.owner}\n${event.kind === 'followUp' ? latest.followUpAction : latest.agenda}\n\nView details: https://dashboard.doctorsatdoor.com/meetings?meeting=${latest.id}`,
       });
       await meetings.markReminder(latest.id, event.kind, model.signature(event));
     }
