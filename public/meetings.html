@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Meetings — DAD Dashboard</title>
+  <link rel="icon" href="/assets/images/dad-logo.png" type="image/png">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/meetings.css?v=1">
+  <script src="/assets/nav.js?v=20261007-meetings"></script>
+</head>
+<body class="meetings-page">
+<aside class="sidebar" id="sidebar"></aside>
+<div class="overlay" id="overlay"></div>
+<div class="page-body">
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger" aria-label="Open navigation">&#9776;</button>
+        <div><h1 class="page-title">Meetings</h1><div class="page-sub" id="meetingDate"></div></div>
+      </div>
+      <div class="topbar-right"><a id="meetingNotion" class="notion-badge" target="_blank" rel="noopener noreferrer" hidden><img src="/assets/images/notion-logo.svg" width="18" height="18" alt="">Notion<span class="notion-dot"></span></a></div>
+    </div>
+    <div class="meeting-intro"><div><p class="meeting-eyebrow">CONVERSATIONS THAT MOVE DAD FORWARD</p><h2>Every conversation. Every next step.</h2><p>Plan meetings, record decisions, and keep your follow-ups in one place.</p></div><button class="mt-btn primary" id="newMeeting">+ New meeting</button></div>
+    <div class="meeting-stats" id="meetingStats"></div>
+    <div class="meeting-toolbar"><div class="meeting-tabs" id="meetingTabs" aria-label="Filter meetings"></div><input type="search" id="meetingSearch" placeholder="Search person, entity, or meeting…" aria-label="Search meetings"></div>
+    <div class="meeting-list" id="meetingList" aria-live="polite"><div class="loading"><div class="spin"></div>Loading meetings…</div></div>
+  </main>
+  <aside class="live-feed-panel" id="liveFeedPanel"><div class="rp-card"><div class="rp-header"><div><div class="rp-title">Coming up</div><div class="meeting-muted">Meetings &amp; follow-ups · IST</div></div></div><div class="rp-content" id="meetingUpcoming"><div class="loading"><div class="spin"></div></div></div></div></aside>
+</div>
+<dialog id="meetingDrawer" class="meeting-drawer" aria-labelledby="drawerHeading">
+  <header class="meeting-drawer-header"><div><p class="meeting-eyebrow" id="drawerEyebrow">MEETING DETAILS</p><h2 id="drawerHeading">Meeting</h2></div><button type="button" class="mt-btn icon" id="closeMeeting" aria-label="Close meeting details">✕</button></header>
+  <div id="meetingDrawerBody"></div>
+</dialog>
+<div class="meeting-toast" id="meetingToast" role="status" hidden></div>
+<script src="/assets/dashboard.js?v=20261007-1"></script>
+<script src="/assets/meeting-model.js?v=1"></script>
+<script src="/assets/meetings.js?v=1"></script>
+</body>
+</html>

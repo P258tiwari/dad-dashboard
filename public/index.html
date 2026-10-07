@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Balthazar&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="/assets/nav.js"></script>
+  <script src="/assets/nav.js?v=20261007-meetings"></script>
 </head>
 <body>
 
@@ -183,6 +183,10 @@
       <div class="loading"><div class="spin"></div>Loading…</div>
     </div>
 
+    <section style="background:white;border:1.5px solid var(--border);border-radius:20px;padding:22px 24px;margin-top:20px;box-shadow:var(--shadow-sm)" aria-labelledby="meetingsWidgetTitle">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px"><h2 id="meetingsWidgetTitle" style="font-size:16px">Meetings &amp; follow-ups</h2><a href="/meetings" style="font-size:12px;font-weight:700;color:var(--brand)">View all ↗</a></div>
+      <div id="dashboardMeetings"><div class="loading"><div class="spin"></div>Loading meetings…</div></div>
+    </section>
   </main>
 
   <!-- ══════════════════════════════════════
@@ -250,7 +254,9 @@
   </div>
 </div>
 
-<script src="/assets/dashboard.js"></script>
+<script src="/assets/dashboard.js?v=20261007-1"></script>
+<script src="/assets/meeting-model.js?v=1"></script>
+<script src="/assets/meeting-widget.js?v=1"></script>
 <script>
   document.getElementById('dateLabel').textContent =
     new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });

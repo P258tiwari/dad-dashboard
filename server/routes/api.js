@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const router  = express.Router();
 const n = require('../notion');
+router.use('/meetings', require('./meetings'));
 
 const isProd = process.env.NODE_ENV === 'production';
 

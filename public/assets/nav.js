@@ -76,6 +76,7 @@ function ico(name, size) {
     { href: '/apps',      ico: 'layers',       label: 'Applications' },
     { type: 'sep', label: 'Operations' },
     { href: '/tasks',     ico: 'check-square', label: 'Tasks' },
+    { href: '/meetings',  ico: 'calendar', label: 'Meetings' },
     { href: '/social',    ico: 'globe',        label: 'Social Media' },
     { href: '/reminders',    ico: 'bell',         label: 'Subscriptions & Alerts', badge: true },
     { href: '/certificates', ico: 'award',        label: 'Certificates' },

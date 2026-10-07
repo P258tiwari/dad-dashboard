@@ -125,6 +125,7 @@ const PAGES = {
   '/apps':         'apps.html',
   '/reminders':    'reminders.html',
   '/tasks':        'tasks.html',
+  '/meetings':     'meetings.html',
   '/social':        'social.html',
   '/certificates':  'certificates.html',
 };
@@ -150,6 +151,8 @@ app.use((req, res) => res.status(404).send(`
 
 // ── Cron: daily reminders at 8:00 AM IST (2:30 UTC) ──────────
 cron.schedule('30 2 * * *', sendReminders, { timezone: 'UTC' });
+// Meetings have time-specific reminders, opt-in per record to the internal inbox.
+cron.schedule('*/5 * * * *', require('./meeting-reminders').sendMeetingReminders, { timezone: 'Asia/Kolkata' });
 
 // ── Start ─────────────────────────────────────────────────────
 app.listen(PORT, () => {
